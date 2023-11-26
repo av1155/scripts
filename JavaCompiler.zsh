@@ -40,9 +40,9 @@ compile_and_run() {
         return 1
     fi
 
-    # Delete the compiled class
-    class_file_path="${java_file_path_without_extension}.class"
-    rm "$class_file_path"
+    # Delete all .class files in the directory of the .java file
+    class_file_dir=$(dirname "$java_file_path")
+    rm ${class_file_dir}/*.class
 }
 
 jcr() {
