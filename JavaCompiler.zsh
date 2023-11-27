@@ -15,9 +15,15 @@ compile_and_run() {
     # Compile the Java file
     compile_command=("javac" "$java_file_path")
     echo -e "${BLUE}Compiling Java file:${NC} ${compile_command[*]}"
-    if ! "${compile_command[@]}"; then
+    if ! "${compile_command[@]}" 2> compile_errors.txt; then
         echo -e "${RED}Compilation failed.${NC}"
+        echo -e "${RED}Detailed errors:${NC}"
+        bat --color=always compile_errors.txt
+        rm compile_errors.txt
         return 1
+    else
+        # Remove the error file if compilation was successful
+        rm compile_errors.txt
     fi
 
     # Get the class name without the '.java' extension
@@ -66,22 +72,22 @@ jcr() {
 
 handle_intellij_project() {
     current_dir=$1
+    # Check if the 'src' directory exists
+    if [ ! -d "src" ]; then
+        echo -e "${RED}Error: 'src' directory not found in the current location.${NC}"
+        echo -e "${RED}Please run the script from the root of your IntelliJ IDEA project.${NC}"
+        return 1
+    fi
+
     # IntelliJ IDEA project structure
-    # Change to the src directory
     cd src || return
 
     # Find the relative path of the java file from the 'src' directory
     java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always {}' --prompt="Select Java File: ")
 
-    # Check if a Java file was selected
     if [ -n "$java_file_path" ]; then
-        # Remove the leading './' from the path
         java_file_path="${java_file_path#./}"
-
-        # Compile and run the Java file
         compile_and_run "$java_file_path"
-
-        # Return to the original directory
         cd "$current_dir" || return
     else
         echo -e "${RED}No Java file selected. Exiting.${NC}"
@@ -90,16 +96,10 @@ handle_intellij_project() {
 
 handle_java_project() {
     current_dir=$1
-    # JavaProject structure
-    # Find the Java file in the current directory
     java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always {}' --prompt="Select Java File: ")
 
-    # Check if a Java file was selected
     if [ -n "$java_file_path" ]; then
-        # Remove the leading './' from the path
         java_file_path="${java_file_path#./}"
-
-        # Compile and run the Java file
         compile_and_run "$java_file_path"
     else
         echo -e "${RED}No Java file selected. Exiting.${NC}"
@@ -107,8 +107,6 @@ handle_java_project() {
 }
 
 # END OF EDGE VERSION (COLOR) ------------------------------------------
-
-
 
 
 # CHANGES: Compile and run without arguments -----------------------------
