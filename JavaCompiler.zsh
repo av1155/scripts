@@ -1,10 +1,23 @@
-# JCR EDGE VERSION (COLOR) -----------------------------------:
+# START OF SCRIPT ---------------------------------------------------
+
+# JavaCompiler is a script that allows users to compile and run Java files from the command line. The script also includes functions to handle various project structures, such as IntelliJ IDEA and JavaProjects, allowing for easy integration into these development environments. Additionally, the script provides error handling and debugging information for both compilation and execution of Java programs.
 
 # Define some color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+
+# Cleanup function to remove *.class files
+cleanup_class_files() {
+    echo -e "${RED}Interrupted. Cleaning up .class files...${NC}"
+    find . -name "*.class" -exec rm {} +
+}
+
+# Trap SIGINT (Ctrl+C) to execute the cleanup_class_files function
+trap cleanup_class_files SIGINT
+
 
 compile_and_run() {
     java_file_path=$1
@@ -51,6 +64,7 @@ compile_and_run() {
     rm ${class_file_dir}/*.class
 }
 
+
 jcr() {
     echo -e "${BLUE}Select project structure:${NC}"
     echo "1) IntelliJ IDEA"
@@ -69,6 +83,7 @@ jcr() {
         echo -e "${RED}Invalid selection. Exiting.${NC}"
     fi
 }
+
 
 handle_intellij_project() {
     current_dir=$1
@@ -94,6 +109,7 @@ handle_intellij_project() {
     fi
 }
 
+
 handle_java_project() {
     current_dir=$1
     java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always {}' --prompt="Select Java File: ")
@@ -106,92 +122,5 @@ handle_java_project() {
     fi
 }
 
-# END OF EDGE VERSION (COLOR) ------------------------------------------
 
-
-# CHANGES: Compile and run without arguments -----------------------------
-
-# compile_and_run() {
-#   java_file_path=$1
-#
-#   # Output debug information
-#   echo "Selected Java File: $java_file_path"
-#
-#   # Compile the Java file
-#   compile_command=("javac" "$java_file_path")
-#   echo "Compiling Java file: ${compile_command[*]}"
-#   "${compile_command[@]}"
-#
-#   # Get the class name without the '.java' extension
-#   class_name=$(basename "$java_file_path" .java)
-#
-#   # Output debug information
-#   echo "Compiled class: $class_name.class"
-#
-#   # Generate the run command by modifying the java_file_path
-#   java_file_path_without_extension=${java_file_path%.java}
-#   run_command=("java" "${java_file_path_without_extension//\//.}")
-#   echo "Running Java file: ${run_command[*]}"
-#   echo ""
-#   "${run_command[@]}"
-#
-#   # Delete the compiled class
-#   class_file_path="${java_file_path_without_extension}.class"
-#   rm "$class_file_path"
-# }
-
-# CHANGES END -------------------------------------------------------------
-
-
-
-
-# Just IntelliJ IDEA project structure -----------------------------------:
-
-# # Java Compile and Run Script (jcr)
-# jcr() {
-#   # Get the current directory
-#   current_dir=$(pwd)
-#
-#   # Find the relative path of the java file from the 'src' directory
-#   # java_file_path=$(find . -name "*.java" | fzf --prompt="Select Java File: ")
-#   # Find the relative path of the java file from the 'src' directory
-#   java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always {}' --prompt="Select Java File: ")
-#
-#   # Check if a Java file was selected
-#   if [ -n "$java_file_path" ]; then
-#     # Remove the leading './' from the path
-#     java_file_path="${java_file_path#./}"
-#
-#     # Output debug information
-#     echo "Selected Java File: $java_file_path"
-#
-#     # Compile the Java file from within the 'src' directory
-#     compile_command=("javac" "$java_file_path")
-#     echo "Compiling Java file: ${compile_command[*]}"
-#     "${compile_command[@]}"
-#
-#     # Get the class name without the '.java' extension
-#     class_name=$(basename "$java_file_path" .java)
-#
-#     # Output debug information
-#     echo "Compiled class: $class_name.class"
-#
-#     # Generate the run command by modifying the java_file_path
-#     java_file_path_without_extension=${java_file_path%.java}
-#     run_command=("java" "${java_file_path_without_extension//\//.}")
-#     echo "Running Java file: ${run_command[*]}"
-#     echo ""
-#     "${run_command[@]}"
-#
-#     # Delete the compiled class from within the 'src' directory
-#     class_file_path="${java_file_path_without_extension}.class"
-#     rm "$class_file_path"
-#
-#     # Return to the original directory
-#     cd "$current_dir" || return
-#   else
-#     echo "No Java file selected. Exiting."
-#   fi
-# }
-
-# # END OF JUST INTELLIJ IDEA PROJECT STRUCTURE ---------------------------
+# END OF SCRIPT ----------------------------------------------------
