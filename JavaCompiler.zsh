@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # START OF SCRIPT ---------------------------------------------------
 
 # JavaCompiler is a script that allows users to compile and run Java files from the command line. The script also includes functions to handle various project structures, such as IntelliJ IDEA and JavaProjects, allowing for easy integration into these development environments. Additionally, the script provides error handling and debugging information for both compilation and execution of Java programs.
@@ -7,16 +9,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
-
-
-# Cleanup function to remove *.class files
-cleanup_class_files() {
-    echo -e "${RED}Interrupted. Cleaning up .class files...${NC}"
-    find . -name "*.class" -exec rm {} +
-}
-
-# Trap SIGINT (Ctrl+C) to execute the cleanup_class_files function
-trap cleanup_class_files SIGINT
 
 
 compile_and_run() {
