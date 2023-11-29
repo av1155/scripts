@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # JavaProject Generator
 
 # Define some color codes
