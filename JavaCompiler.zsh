@@ -16,9 +16,7 @@ cleanup_class_files() {
 }
 
 # Trap SIGINT (Ctrl+C) to execute the cleanup_class_files function
-if [ "$(basename "$0")" = "JavaCompiler.zsh" ]; then
-    trap cleanup_class_files SIGINT
-fi
+trap cleanup_class_files SIGINT
 
 
 compile_and_run() {
