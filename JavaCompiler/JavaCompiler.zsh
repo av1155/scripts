@@ -10,6 +10,8 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Path for storing the last run file
+last_run_file="$HOME/scripts/JavaCompiler/last_run.txt"
 
 compile_and_run() {
     java_file_path=$1
@@ -51,6 +53,9 @@ compile_and_run() {
         return 1
     fi
 
+    # Store the last run file's path
+    echo "$java_file_path" > "$last_run_file"
+
     # Delete all .class files in the directory of the .java file
     class_file_dir=$(dirname "$java_file_path")
     rm ${class_file_dir}/*.class
@@ -58,24 +63,39 @@ compile_and_run() {
 
 
 jcr() {
-    echo -e "${BLUE}Select project structure:${NC}"
+    current_dir=$(pwd)
+
+    echo -e "${BLUE}Select project structure or action:${NC}"
     echo "1) IntelliJ IDEA"
     echo "2) JavaProject"
+    if [ -f "$last_run_file" ]; then
+        echo "3) Run Last File"
+    fi
     echo -n "> "
     read -r project_structure
 
-    # Get the current directory
-    current_dir=$(pwd)
-
-    if [ "$project_structure" = "1" ]; then
-        handle_intellij_project "$current_dir"
-    elif [ "$project_structure" = "2" ]; then
-        handle_java_project "$current_dir"
-    else
-        echo -e "${RED}Invalid selection. Exiting.${NC}"
-    fi
+    case $project_structure in
+        1)
+            handle_intellij_project "$current_dir"
+            ;;
+        2)
+            handle_java_project "$current_dir"
+            ;;
+        3)
+            if [ -f "$last_run_file" ]; then
+                java_file_path=$(cat "$last_run_file")
+                cd src || return # Change to src directory
+                compile_and_run "$java_file_path"
+                cd "$current_dir" || return
+            else
+                echo -e "${RED}No last file to run. Please select a project structure.${NC}"
+            fi
+            ;;
+        *)
+            echo -e "${RED}Invalid selection. Exiting.${NC}"
+            ;;
+    esac
 }
-
 
 handle_intellij_project() {
     current_dir=$1
