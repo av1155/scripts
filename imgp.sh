@@ -120,7 +120,6 @@ CURRENT_DIR=$(pwd)
 
 # Function to run imgcat for iTerm2
 run_imgcat_iterm2() {
-    # AppleScript to open a new iTerm2 window and run imgcat with the selected file
     osascript <<EOF
 tell application "iTerm2"
     set newWindow to (create window with default profile)
@@ -141,23 +140,76 @@ run_icat_kitty() {
     lines=$(tput lines)
 
     # Calculate 80% of the terminal size
-    local width=$((cols * 80 / 100))
-    local height=$((lines * 80 / 100))
+    local width=$((cols * 60 / 100))
+    local height=$((lines * 60 / 100))
 
-    # Place the image to occupy 80% of the terminal, centered
-    local place_string="${width}x${height}@0x0"
+    # Place the image to occupy 60% of the terminal, centered
+    local place_string="${width}x${height}@10x15"
 
     # Run icat with the calculated dimensions and scale-up option
     kitty +kitten icat --clear --place "$place_string" --scale-up "$FILE_NAME"
 }
 
-# Determine the terminal emulator and run the appropriate function
-if [[ "$IS_KITTY" -eq 1 ]]; then
-    # Running in Kitty
-    run_icat_kitty
-elif [[ "$IS_ITERM2" -eq 1 ]]; then
-    # Running in iTerm2
-    run_imgcat_iterm2
-else
-    echo "Unsupported terminal. This script supports iTerm2 and Kitty."
+# Function to display image using viu with block output in tmux
+run_viu_tmux() {
+    if [ -f "$FILE_NAME" ]; then
+        # Get the terminal size
+        local cols
+        cols=$(tput cols)
+
+        local lines
+        lines=$(tput lines)
+
+        # Calculate 60% of the terminal size
+        local width=$((cols * 60 / 100))
+        local height=$((lines * 60 / 100))
+
+        # Display the image with viu, resized to 60% of the terminal dimensions and force block output
+        viu -w "$width" -h "$height" -b "$FILE_NAME"
+    else
+        echo "File not found: $FILE_NAME"
+        exit 1
+    fi
+}
+
+# Function to display image using viu with resized dimensions
+run_viu_generic() {
+    if [ -f "$FILE_NAME" ]; then
+        # Get the terminal size
+        local cols
+        cols=$(tput cols)
+
+        local lines
+        lines=$(tput lines)
+
+        # Calculate 60% of the terminal size
+        local width=$((cols * 60 / 100))
+        local height=$((lines * 60 / 100))
+
+        # Display the image with viu, resized to 60% of the terminal dimensions
+        viu -w "$width" -h "$height" "$FILE_NAME" -b
+    else
+        echo "File not found: $FILE_NAME"
+        exit 1
+    fi
+}
+
+# If Kitty is installed and we're not in tmux, attempt to run in Kitty
+if command -v kitty &>/dev/null && [ -z "$TMUX" ]; then
+    run_icat_kitty 2>/dev/null && exit 0
 fi
+
+# If we're running inside tmux
+if [ -n "$TMUX" ]; then
+    run_viu_tmux && exit 0
+fi
+
+# If iTerm2 is installed, attempt to run in iTerm2
+if command -v osascript &>/dev/null && [[ -f "$HOME/.iterm2/imgcat" ]]; then
+    run_imgcat_iterm2 2>/dev/null && exit 0
+fi
+
+# Fallback to using viu if no other terminal-specific function worked
+run_viu_generic && exit 0
+
+echo "Unsupported terminal. This script supports iTerm2, Kitty, tmux, and other terminals via viu."
