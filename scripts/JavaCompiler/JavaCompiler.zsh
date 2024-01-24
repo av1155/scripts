@@ -11,7 +11,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Path for storing the last run file
-last_run_file="$HOME/scripts/JavaCompiler/last_run.txt"
+last_run_file="$HOME/scripts/scripts/JavaCompiler/last_run.txt"
 
 compile_and_run() {
     java_file_path=$1
