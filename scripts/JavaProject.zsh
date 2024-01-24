@@ -53,47 +53,55 @@ validate_class_name() {
 }
 
 
+
 # Function to create a sample Java file based on a template
 create_java_file() {
     echo "" # Add a newline
-    echo -e "${BLUE}Choose a template:${NC}"
-    echo "1) Basic"
-    echo "2) With Constructor"
-    echo "3) Singleton"
-    echo "4) With Getters/Setters"
+    echo -e "${BLUE}Do you want to create a Java file? (y/n, default: n):${NC}"
     echo -n "> "
-    read -r template_choice
+    read -r create_java_choice
 
     echo ""
 
-    # Ask for the class name
-    echo -n "${BLUE}Enter the class name:${NC} "
-    read class_name
+    if [[ "$create_java_choice" == "y" ]]; then
+        # Ask for the class name
+        echo -n "${BLUE}Enter the class name:${NC} "
+        read class_name
 
-    # Validate class name
-    validate_class_name "$class_name" || return 1
+        # Validate class name
+        validate_class_name "$class_name" || return 1
 
-    case "$template_choice" in
-        1)
-            cat <<EOF > src/main/java/${class_name}.java
+        echo -e "${BLUE}Choose a template:${NC}"
+        echo "1) Basic"
+        echo "2) With Constructor"
+        echo "3) Singleton"
+        echo "4) With Getters/Setters"
+        echo -n "> "
+        read -r template_choice
+
+        echo ""
+
+        case "$template_choice" in
+            1)
+                cat <<EOF > src/main/java/${class_name}.java
 public class ${class_name} {
     public static void main(String[] args) {
         System.out.println("Hello, World!");
     }
 }
 EOF
-            ;;
-        2)
-            cat <<EOF > src/main/java/${class_name}.java
+                ;;
+            2)
+                cat <<EOF > src/main/java/${class_name}.java
 public class ${class_name} {
     public ${class_name}() {
         // constructor code here
     }
 }
 EOF
-            ;;
-        3)
-            cat <<EOF > src/main/java/${class_name}.java
+                ;;
+            3)
+                cat <<EOF > src/main/java/${class_name}.java
 public class ${class_name} {
     private static ${class_name} instance;
     private ${class_name}() {
@@ -107,9 +115,9 @@ public class ${class_name} {
     }
 }
 EOF
-            ;;
-        4)
-            cat <<EOF > src/main/java/${class_name}.java
+                ;;
+            4)
+                cat <<EOF > src/main/java/${class_name}.java
 public class ${class_name} {
     private String field;
     public String getField() {
@@ -120,14 +128,19 @@ public class ${class_name} {
     }
 }
 EOF
-            ;;
-        *)
-            echo -e "${RED}Error: Invalid template choice.${NC}"
-            cleanup "$project_name"
-            return 1
-            ;;
-    esac
+                ;;
+            *)
+                echo -e "${RED}Error: Invalid template choice.${NC}"
+                cleanup "$project_name"
+                return 1
+                ;;
+        esac
+    else
+        echo -e "${GREEN}No Java file created.${NC}"
+    fi
 }
+
+
 
 
 # Function to create a sample Java test file based on a template
@@ -216,6 +229,17 @@ target/
 EOF
 }
 
+# Function to get Java version
+get_java_version() {
+    local version
+    version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $1}')
+    if [[ -z "$version" ]]; then
+        echo "Error: Could not determine Java version."
+        return 1
+    fi
+    echo "$version"
+}
+
 
 # Main function to create a Java project
 javaproject() {
@@ -250,26 +274,44 @@ javaproject() {
     # Create pom.xml file
     create_pom_file || return 1
 
+    # Get Java version
+    local java_version
+    java_version=$(get_java_version) || { echo -e "${RED}Error: Could not determine Java version.${NC}"; return 1; }
+
     # Add content to pom.xml
     cat <<EOF > pom.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.av1155</groupId>
-  <artifactId>$project_name</artifactId>
-  <packaging>jar</packaging>
-  <version>0.1-SNAPSHOT</version>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.av1155</groupId>
+    <artifactId>$project_name</artifactId>
+    <packaging>jar</packaging>
+    <version>0.1-SNAPSHOT</version>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.10.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+
+    <properties>
+        <maven.compiler.source>$java_version</maven.compiler.source>
+        <maven.compiler.target>$java_version</maven.compiler.target>
+    </properties>
+
+
+    <build>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <outputDirectory>target/classes</outputDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>
 EOF
