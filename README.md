@@ -10,27 +10,49 @@ productivity, and make life easier.
 
 Here's a brief overview of the scripts included in this repository:
 
-1. `JavaCompiler.zsh`: A dynamic ZSH script designed to simplify the compilation
-   and execution of Java files. Supporting different project structures like
-   IntelliJ IDEA and JavaProject (`JavaProject.zsh`), the script utilizes the
-   interactive file selection capabilities of fzf, allowing users to
-   effortlessly choose Java files. The file preview functionality, powered by
-   bat, enhances the selection process by providing a visually appealing and
-   informative display. This combination of fzf and bat not only makes file
-   selection easy but also adds a touch of elegance to the user experience. The
-   script seamlessly handles the compilation and execution of Java files, making
-   it a convenient and visually pleasing tool for Java developers.
-2. `JavaProject.zsh`: A comprehensive ZSH script designed to expedite the
-   creation of Java projects. This script automates the setup of project
-   directories, generates standard Maven structures, and facilitates the
-   creation of Java classes with customizable templates. It includes optional
-   features such as generating JUnit test files, creating a .gitignore file to
-   exclude unnecessary files from version control, and constructing essential
-   project files like pom.xml and README.md. The script ensures project
-   integrity through validation of project and class names, avoidance of Java
-   reserved words, and provides a cleanup mechanism in case of errors. With
-   interactive prompts and versatile options, it offers a user-friendly
-   experience tailored to diverse project needs.
+1. `JavaCompiler.zsh`: This dynamic ZSH script is designed to compile and run Java files with ease. It supports various project structures, including IntelliJ IDEA and JavaProjects, and integrates smoothly into these environments. Key features include:
+
+    - Error handling and debugging information for both compilation and execution stages.
+    - Interactive file selection using fzf, enhanced by a file preview feature powered by bat.
+    - Capability to handle project-specific structures and clean up .class files post-execution.
+    - Stores the path of the last run file for easy recompilation and rerunning.
+    - Allows users to enter arguments for Java programs.
+    - Color-coded output for better readability and user experience.
+
+2. `JavaProject.zsh`: This script is a powerful tool for automating the creation of Java projects with Maven. It offers a range of features to streamline project setup and ensure proper structure. Key functionalities include:
+
+    - Validation of project and class names, ensuring adherence to naming conventions and avoidance of Java reserved words.
+    - Automatic creation of standard Maven project directories and essential files like `pom.xml` and `README.md`.
+    - Customizable Java class file generation with template options such as Basic, With Constructor, Singleton, and With Getters/Setters.
+    - Option to create JUnit test files with a basic test template.
+    - Integration of Maven for project building, including checks for Java and Maven installations.
+    - Creation of a `.gitignore` file tailored for Java and Maven projects.
+    - Handling of error scenarios with a cleanup mechanism to remove partially created project files and directories.
+
+3. `imgp.sh`: This script is a flexible tool for viewing images directly in various terminal environments. It is designed to work with iTerm2, Kitty, tmux, and other terminals via the viu image viewer. Key features include:
+
+    - Ability to search and select image files within a specified directory depth, using the powerful fzf tool for file selection.
+    - Support for a wide range of image formats, including jpg, jpeg, png, gif, webp, tiff, bmp, heif, avif, and many more.
+    - Customizable depth setting for file search, allowing users to define how deep the script searches for image files.
+    - Integration with terminal-specific image viewers like iTerm2's imgcat, Kitty's icat, and viu, ensuring optimal display in different environments.
+    - Option to specify a filename directly for quick image viewing.
+    - Automated terminal detection to utilize the best available method for displaying images based on the user's current terminal setup.
+
+4. `sqlurl.sh`: This script is an essential utility for database management, providing a streamlined approach to connect to various database systems. It is specifically tailored for users who frequently interact with databases in their development workflow. Key functionalities include:
+
+    - Interactive selection of `.db` files in the current directory using the fzf tool.
+    - Support for multiple database management tools including SQLite, MySQL, PostgreSQL, MSSQL, Oracle, and MongoDB.
+    - User-friendly prompts for entering database connection details like username, password, hostname, port, and database name.
+    - Automatic construction of database connection URLs based on user input, catering to different database systems.
+    - Color-coded output for better readability and user experience.
+    - Validation of user input to ensure the correct selection of database tools and connection parameters.
+
+5. `nvim_surround_usage.sh`: This script serves as a quick reference guide for the Vim Surround plugin in Neovim. It outlines the core operations of adding, deleting, and changing text surroundings, which are essential for efficient code editing. Key highlights include:
+    - Keymaps for adding (`ys`), deleting (`ds`), and changing (`cs`) text surroundings.
+    - Practical examples demonstrating how to apply these keymaps in various editing scenarios.
+    - Coverage of common use cases like surrounding words, making strings, deleting tags, and changing quotes.
+    - Instructions for working with different types of text elements, including parentheses, brackets, quotes, and HTML tags.
+    - A simple, easy-to-read format that allows users to quickly reference and apply these keymaps in their editing workflow.
 
 ## Installation
 
