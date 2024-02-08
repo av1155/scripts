@@ -146,7 +146,7 @@ handle_intellij_project() {
     cd src || return
 
     # Find the relative path of the java file from the 'src' directory
-    java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --prompt="Select Java File: ")
+    java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --preview-window right:60% --prompt="Select Java File: ")
 
     if [ -n "$java_file_path" ]; then
         java_file_path="${java_file_path#./}"
@@ -160,7 +160,7 @@ handle_intellij_project() {
 
 handle_java_project() {
     current_dir=$1
-    java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --prompt="Select Java File: ")
+    java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --preview-window right:60% --prompt="Select Java File: ")
 
     if [ -n "$java_file_path" ]; then
         java_file_path="${java_file_path#./}"
