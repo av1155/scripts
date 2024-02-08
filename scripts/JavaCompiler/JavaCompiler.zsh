@@ -80,7 +80,7 @@ compile_and_run() {
     read -A args
     java_file_path_without_extension=${java_file_path%.java}
     run_command=("java" "${java_file_path_without_extension//\//.}" "${args[@]}")
-    echo -e "${BLUE}Running Java file:${NC} ${run_command[*]}"
+    echo -e "${BLUE}Running Java file:${NC} ${run_command[*]}\n"
     if ! "${run_command[@]}"; then
         echo -e "${RED}Execution failed.${NC}"
         # Clear the trap to prevent cleanup if execution fails
@@ -160,7 +160,7 @@ handle_intellij_project() {
 
 handle_java_project() {
     current_dir=$1
-    java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always {}' --prompt="Select Java File: ")
+    java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --prompt="Select Java File: ")
 
     if [ -n "$java_file_path" ]; then
         java_file_path="${java_file_path#./}"
