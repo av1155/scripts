@@ -83,6 +83,7 @@ compile_and_run() {
     echo -e "${BLUE}Running Java file:${NC} ${run_command[*]}\n"
     if ! "${run_command[@]}"; then
         echo -e "${RED}Execution failed.${NC}"
+        cleanup
         # Clear the trap to prevent cleanup if execution fails
         trap - SIGINT
         return 1
