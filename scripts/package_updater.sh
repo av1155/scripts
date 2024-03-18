@@ -51,10 +51,9 @@ update_npm() {
 # Function to update AstroNvim
 update_astronvim() {
   echo -e "${BLUE}Updating AstroNvim...${NC}"
-  nvim --headless -c "Lazy! sync" -c "qa" > astro_update.log 2>&1
-  nvim --headless -c "MasonUpdateAll" -c "qa" > astro_update.log 2>&1
-  bat astro_update.log
-  rm astro_update.log
+  nvim --headless "+Lazy! sync" +qa
+  nvim --headless "+TSUpdate" +qa
+  nvim --headless "+MasonUpdateAll" +qa
 }
 
 # ==============================================
