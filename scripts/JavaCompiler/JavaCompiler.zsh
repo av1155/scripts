@@ -8,6 +8,7 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+ORANGE='\033[0;33m'
 NC='\033[0m' # No Color
 
 # Path for storing the last run file
@@ -50,6 +51,7 @@ compile_and_run() {
     current_java_file_dir=$(pwd)/$(dirname "$java_file_path")
 
     # Compilation logic
+    echo ""
     echo -e "${GREEN}Selected Java File:${NC} $java_file_path"
     compile_command=("javac" "$java_file_path")
     echo -e "${BLUE}Compiling Java file:${NC} ${compile_command[*]}"
@@ -76,15 +78,31 @@ compile_and_run() {
     # Execution logic
     class_name=$(basename "$java_file_path" .java)
     echo -e "${GREEN}Compiled class:${NC} $class_name.class"
+
     echo -e "${BLUE}Enter arguments (separated by space):${NC}"
-    read -A args
+    read input_args
+
+    # Convert input string to an array only if it's not empty
+    if [ -n "$input_args" ]; then
+        read -A args <<< "$input_args"
+    else
+        args=()
+    fi
+
     java_file_path_without_extension=${java_file_path%.java}
-    run_command=("java" "${java_file_path_without_extension//\//.}" "${args[@]}")
-    echo -e "${BLUE}Running Java file:${NC} ${run_command[*]}\n"
+
+    if [ ${#args[@]} -eq 0 ]; then
+        run_command=("java" "${java_file_path_without_extension//\//.}")
+    else
+        run_command=("java" "${java_file_path_without_extension//\//.}" "${args[@]}")
+    fi
+
+    echo -e "${BLUE}Running Java file:${NC} ${run_command[*]}"
+    echo "-----------------------------------------------------\n"
+
     if ! "${run_command[@]}"; then
         echo -e "${RED}Execution failed.${NC}"
         cleanup
-        # Clear the trap to prevent cleanup if execution fails
         trap - SIGINT
         return 1
     fi
@@ -101,13 +119,15 @@ compile_and_run() {
 
 jcr() {
     current_dir=$(pwd)
-
+    echo ""
     echo -e "${BLUE}Select project structure or action:${NC}"
     echo "1) IntelliJ IDEA"
     echo "2) JavaProject"
     if [ -f "$last_run_file" ]; then
-        echo "3) Run Last File"
+        java_file_path=$(cat "$last_run_file")
+        echo "3) Run Last File (${ORANGE}${java_file_path}${NC})"
     fi
+    echo "4) Exit"
     echo -n "> "
     read -r project_structure
 
@@ -115,9 +135,11 @@ jcr() {
         1)
             handle_intellij_project "$current_dir"
             ;;
+
         2)
             handle_java_project "$current_dir"
             ;;
+
         3)
             if [ -f "$last_run_file" ]; then
                 java_file_path=$(cat "$last_run_file")
@@ -128,6 +150,12 @@ jcr() {
                 echo -e "${RED}No last file to run. Please select a project structure.${NC}"
             fi
             ;;
+
+        4) # Exit the script
+            echo -e "${GREEN}Exiting.${NC}"
+            exit
+            ;;
+
         *)
             echo -e "${RED}Invalid selection. Exiting.${NC}"
             ;;
