@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # This script updates all the installed packages/applications on the system.
 # Dependencies: Homebrew (brew), miniforge (conda), Oh My Zsh (omz), Mac App Store CLI (mas), npm (Node.js)
@@ -32,7 +32,7 @@ update_miniforge() {
 # Function to update Oh My Zsh
 update_omz() {
 	echo -e "${BLUE}Updating Oh My Zsh...${NC}"
-	sh "$HOME/.oh-my-zsh/tools/upgrade.sh"
+	"$ZSH/tools/upgrade.sh"
 }
 
 # Function to update Mac App Store applications
