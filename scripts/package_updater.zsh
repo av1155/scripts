@@ -1,19 +1,22 @@
 #!/bin/zsh
 
 # This script updates all the installed packages/applications on the system.
-# Dependencies: Homebrew (brew), miniforge (conda), Oh My Zsh (omz), Mac App Store CLI (mas), npm (Node.js)
+# Dependencies: Homebrew (brew), miniforge (conda), Oh My Zsh (omz), Mac App Store CLI (mas), npm (Node.js), and Node.js via nvm.
 
 # ANSI color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
+ORANGE='\033[0;33m'
 NC='\033[0m' # No Color
 
 # Function to check if a command exists
 command_exists() {
 	command -v "$1" >/dev/null 2>&1
 }
+
+# UPDATE FUNCTIONS ===================================================================
 
 # Function to update Homebrew
 update_homebrew() {
@@ -22,26 +25,32 @@ update_homebrew() {
 	brew upgrade
 	brew cleanup
 	brew autoremove
+	echo -e "${ORANGE}====================================================================================${NC}"
 }
 
 # Function to update all conda environments
 update_all_conda_envs() {
     echo -e "${BLUE}Updating all Conda environments...${NC}"
 	conda update --all -y
+	conda clean --all -y
 
     for env in $(conda env list | awk '{print $1}' | grep -vE '^\#|base'); do
         echo -e "${GREEN}Activating and updating $env...${NC}"
         source activate $env
         conda update --all -y
+        conda clean --all -y
         conda deactivate
     done
 
     echo -e "${GREEN}All Conda environments have been updated.${NC}"
+	echo -e "${ORANGE}====================================================================================${NC}"
 }
 
 # Function to update Oh My Zsh
 update_omz() {
 	"$ZSH/tools/upgrade.sh"
+	"$ZSH/tools/changelog.sh"
+	echo -e "${ORANGE}====================================================================================${NC}"
 }
 
 # Function to update Mac App Store applications
@@ -49,14 +58,7 @@ update_mas() {
 	echo -e "${BLUE}Updating Mac App Store applications...${NC}"
 	mas outdated
 	mas upgrade
-}
-
-# Function to update AstroNvim
-update_astronvim() {
-	echo -e "${BLUE}Updating AstroNvim...${NC}"
-	nvim --headless "+Lazy sync" +qa
-	nvim --headless "+TSUpdate" +qa
-	nvim --headless "+AstroMasonUpdateAll" +qa
+	echo -e "${ORANGE}====================================================================================${NC}"
 }
 
 # Function to update Node.js using NVM
@@ -95,21 +97,34 @@ update_node() {
 	else
 		echo -e "${BLUE}Already on the latest LTS version of Node.js.${NC}"
 	fi
+	echo -e "${ORANGE}====================================================================================${NC}"
 }
 
 # Function to update npm
 update_npm() {
     echo -e "${BLUE}Do you want to update npm? (y/n)${NC}"
-    read -r update_choice
-    if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
+    # Set a 10-second timeout for user response
+    read -r -t 10 update_choice
+    if [[ $? -eq 0 ]] && [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
         echo -e "${BLUE}Updating npm...${NC}"
         npm update -g || { echo -e "${RED}Failed to update npm.${NC}"; exit 1; }
     else
         echo -e "${GREEN}Skipping npm update.${NC}"
     fi
+    echo -e "${ORANGE}====================================================================================${NC}"
 }
 
-# ==============================================
+# Function to update AstroNvim
+update_astronvim() {
+	echo -e "${BLUE}Updating AstroNvim...${NC}"
+	nvim --headless "+AstroUpdate" +qa
+	nvim --headless "+AstroMasonUpdateAll" +qa
+	nvim --headless "+Lazy sync" +qa
+	nvim --headless "+TSUpdate" +qa
+	echo -e "\n${ORANGE}====================================================================================${NC}"
+}
+
+# MAIN SCRIPT ===================================================================
 
 # Update Homebrew
 if command_exists brew; then
