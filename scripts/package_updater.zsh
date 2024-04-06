@@ -1,5 +1,18 @@
 #!/bin/zsh
 
+# Set the PATH to include Homebrew's bin directory and system paths
+export PATH="/opt/homebrew/bin:$PATH"
+
+# Set the ZSH variable to the Oh My Zsh directory
+export ZSH="/Users/andreaventi/.oh-my-zsh"
+
+# Initialize Conda for script usage
+source /opt/homebrew/Caskroom/miniforge/base/etc/profile.d/conda.sh
+
+# Initialize NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
 # This script updates all the installed packages/applications on the system.
 # Dependencies: Homebrew (brew), miniforge (conda), Oh My Zsh (omz), Mac App Store CLI (mas), npm (Node.js), and Node.js via nvm.
 
@@ -36,7 +49,7 @@ update_all_conda_envs() {
 
     for env in $(conda env list | awk '{print $1}' | grep -vE '^\#|base'); do
         echo -e "${GREEN}Activating and updating $env...${NC}"
-        source activate $env
+        conda activate $env
         conda update --all -y
         conda clean --all -y
         conda deactivate
@@ -63,9 +76,6 @@ update_mas() {
 
 # Function to update Node.js using NVM
 update_node() {
-	# Your node update logic goes here, adapted from your first script
-	# Ensure that NVM is loaded and then follow the logic to check for Node updates
-	# This will include checking the current Node version, comparing with the latest LTS version, and updating if necessary
 	echo -e "${BLUE}Updating Node.js...${NC}"
 
 	# Get the current version of Node.js
@@ -102,14 +112,21 @@ update_node() {
 
 # Function to update npm
 update_npm() {
-    echo -e "${BLUE}Do you want to update npm? (y/n)${NC}"
-    # Set a 10-second timeout for user response
-    read -r -t 10 update_choice
-    if [[ $? -eq 0 ]] && [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
-        echo -e "${BLUE}Updating npm...${NC}"
-        npm update -g || { echo -e "${RED}Failed to update npm.${NC}"; exit 1; }
+    if [ -t 0 ]; then
+        # Interactive mode
+        echo -e "${BLUE}Do you want to update npm? (y/n)${NC}"
+        # Set a 10-second timeout for user response
+        read -r -t 10 update_choice
+        if [[ $? -eq 0 ]] && [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
+            echo -e "${BLUE}Updating npm...${NC}"
+            npm update -g || { echo -e "${RED}Failed to update npm.${NC}"; exit 1; }
+        else
+            echo -e "${GREEN}Skipping npm update.${NC}"
+        fi
     else
-        echo -e "${GREEN}Skipping npm update.${NC}"
+        # Non-interactive mode (e.g., cron job)
+        echo -e "${BLUE}Updating npm in non-interactive mode...${NC}"
+        npm update -g || { echo -e "${RED}Failed to update npm.${NC}"; exit 1; }
     fi
     echo -e "${ORANGE}====================================================================================${NC}"
 }
@@ -159,9 +176,6 @@ else
 fi
 
 # Update Node.js using NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
 if command_exists nvm; then
     update_node
     echo "" # Add a newline for better readability
