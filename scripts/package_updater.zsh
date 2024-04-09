@@ -1,10 +1,12 @@
 #!/bin/zsh
 
-# Set the PATH to include Homebrew's bin directory and system paths
-export PATH="/opt/homebrew/bin:$PATH"
+if [ ! -t 0 ]; then
+	# Set the PATH to include Homebrew's bin directory and system paths
+	export PATH="/opt/homebrew/bin:$PATH"
 
-# Set the ZSH variable to the Oh My Zsh directory
-export ZSH="/Users/andreaventi/.oh-my-zsh"
+	# Set the ZSH variable to the Oh My Zsh directory
+	export ZSH="/Users/andreaventi/.oh-my-zsh"
+fi
 
 # Initialize Conda for script usage
 source /opt/homebrew/Caskroom/miniforge/base/etc/profile.d/conda.sh
