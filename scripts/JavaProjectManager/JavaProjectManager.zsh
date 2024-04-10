@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-# This script, JavaProjectManager, serves as a versatile command-line utility for Java developers, facilitating the compilation and execution of Java files. It's designed to seamlessly interact with different Java project structures, specifically tailored for IntelliJ IDEA projects and Generic Java projects. Users benefit from an interactive menu that allows them to choose the project context or rerun previously executed files efficiently. The script ensures a clean working environment by managing temporary .class files, thus preventing clutter. Additionally, it offers robust error handling and presents compilation and execution errors in an easily understandable format. This utility is especially useful for developers looking for a quick and streamlined way to compile and test their Java code outside of an IDE.
+# This script, JavaProjectManager, serves as a versatile command-line utility for Java developers, facilitating the compilation and execution of Java files. It's designed to seamlessly interact with different Java project structures, specifically tailored for IntelliJ IDEA projects and Generic Java files. Users benefit from an interactive menu that allows them to choose the project context or rerun previously executed files efficiently. The script ensures a clean working environment by managing temporary .class files, thus preventing clutter. Additionally, it offers robust error handling and presents compilation and execution errors in an easily understandable format. This utility is especially useful for developers looking for a quick and streamlined way to compile and test their Java code outside of an IDE.
 
 # COLOR CODES
 RED='\033[0;31m'
@@ -184,7 +184,7 @@ jcr() {
         echo ""
         echo -e "${BLUE}Select project structure or action:${NC}"
         echo "1) IntelliJ IDEA Project"
-        echo "2) Generic Java Project"
+        echo "2) Generic Java File"
         if [ -f "$last_run_file" ]; then
             java_file_path=$(cat "$last_run_file")
             echo "3) Re-run Last Executed File (${ORANGE}${java_file_path}${NC})"
@@ -200,7 +200,7 @@ jcr() {
                 ;;
 
             2)
-                handle_java_project "$current_dir"
+                handle_java_file "$current_dir"
                 break
                 ;;
 
@@ -251,7 +251,7 @@ handle_intellij_project() {
     fi
 }
 
-handle_java_project() {
+handle_java_file() {
     current_dir=$1
     java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --preview-window right:60% --prompt="Select Java File: ")
 
