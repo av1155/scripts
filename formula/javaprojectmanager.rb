@@ -1,4 +1,4 @@
-class JavaProjectManager < Formula
+class Javaprojectmanager < Formula
   desc 'A versatile command-line utility for Java developers to compile and run Java files from the terminal.'
   homepage 'https://github.com/av1155/scripts'
   url 'https://raw.githubusercontent.com/av1155/scripts/main/scripts/JavaProjectManager/JavaProjectManager.zsh'
