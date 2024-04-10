@@ -9,8 +9,53 @@ BLUE='\033[0;34m'
 ORANGE='\033[0;33m'
 NC='\033[0m' # No Color
 
-# Path for storing the last run file
-last_run_file="$HOME/scripts/scripts/JavaCompiler/last_run.txt"
+# ----------------------------- #
+
+# Check for required dependencies
+for cmd in fzf bat javac java; do
+    if ! command -v $cmd &> /dev/null; then
+        echo -e "${RED}Error: '$cmd' is not installed. Please install '$cmd' to use this script.${NC}"
+        exit 1
+    fi
+done
+
+# ----------------------------- #
+
+version="1.0"
+help_message="${BLUE}Usage: $(basename "$0") [OPTIONS]
+${NC}- ${ORANGE}IntelliJ IDEA Project:${NC} Run the script from the root directory of the IntelliJ IDEA project. 
+  The script will navigate to the 'src' directory, where you can choose which Java source file 
+  to compile and run.
+${NC}- ${ORANGE}Generic Java Project:${NC} Run the script from a directory containing Java files. You will be 
+  presented with a list of all Java files found within the directory. Select the Java file 
+  you wish to compile and run.
+${NC}- ${ORANGE}Argument Handling:${NC} The script allows you to provide arguments for the Java file you want to run.
+  Enter the arguments separated by spaces when prompted.
+
+${BLUE}A versatile command-line utility for Java developers to compile and run Java files.
+${NC}OPTIONS:
+${GREEN}-h, --help      ${NC}Display this help message and exit.
+${GREEN}-v, --version   ${NC}Display version information and exit."
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -h|--help) echo -e "$help_message"; exit 0 ;;
+        -v|--version) echo -e "${GREEN}$version${NC}"; exit 0 ;;
+        *)
+            # Display the unknown option error followed by the options list
+            echo -e "${RED}Unknown option: $1${NC}\n${NC}\nOptions:\n${GREEN}-h, --help      ${NC}Display help message and exit.\n${GREEN}-v, --version   ${NC}Display version information and exit." >&2
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+# ----------------------------- #
+
+# Get the directory where the script is located
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+# Path for storing the last run file relative to the script's location
+last_run_file="${script_dir}/last_run.txt"
 
 # Global variable to hold the directory of the currently processed Java file
 current_java_file_dir=""
@@ -23,12 +68,25 @@ cleanup() {
         setopt local_options nullglob
         class_files=("${current_java_file_dir}"/*.class)
 
-        # Check if class_files array is not empty
-        if [[ ${#class_files[@]} -gt 0 ]]; then
-            rm -f "${class_files[@]}"
-            echo -e "${GREEN}The .class files in $current_java_file_dir were removed successfully.${NC}"
-        else
+        if [[ ${#class_files[@]} -eq 0 ]]; then
             echo -e "${GREEN}No .class files found in $current_java_file_dir. No cleanup needed.${NC}"
+        else
+            for class_file in "${class_files[@]}"; do
+                if rm -f "$class_file"; then
+                    # Extracting just the directory and file name, excluding the full path
+                    dir_name=$(dirname "$class_file")
+                    base_name=$(basename "$class_file")
+                    short_path="${dir_name##*/}/$base_name"
+                    echo -e "${GREEN}Deleted ${short_path}${NC}"
+                else
+                    # Similar extraction for the failed deletion case
+                    dir_name=$(dirname "$class_file")
+                    base_name=$(basename "$class_file")
+                    short_path="${dir_name##*/}/$base_name"
+                    echo -e "${RED}Failed to delete ${short_path}${NC}"
+                fi
+            done
+            echo -e "${GREEN}Cleanup completed.${NC}"
         fi
 
         # Update the flag to prevent repeated cleanup operations
@@ -44,8 +102,14 @@ compile_and_run() {
     trap 'cleanup' SIGINT
 
     java_file_path=$1
+
     # Update the last run file and current directory for cleanup
-    echo "$java_file_path" > "$last_run_file"
+    # Ensure last_run_file exists
+    if [ ! -f "$last_run_file" ]; then
+        touch "$last_run_file" || { echo -e "${RED}Failed to create $last_run_file.${NC}"; exit 1; }
+    fi
+    echo "$java_file_path" > "$last_run_file" || { echo -e "${RED}Failed to write to $last_run_file.${NC}"; return 1; }
+
     current_java_file_dir=$(pwd)/$(dirname "$java_file_path")
 
     # Compilation logic
@@ -125,7 +189,7 @@ jcr() {
             java_file_path=$(cat "$last_run_file")
             echo "3) Re-run Last Executed File (${ORANGE}${java_file_path}${NC})"
         fi
-        echo "4) Exit Script"
+        echo "0) Exit Script"
         echo -n "> "
         read -r project_structure
 
@@ -152,7 +216,7 @@ jcr() {
                 fi
                 ;;
 
-            4) # Exit the script
+            0) # Exit the script
                 echo -e "${GREEN}Exiting.${NC}"
                 exit
                 ;;
