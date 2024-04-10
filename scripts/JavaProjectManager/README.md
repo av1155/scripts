@@ -2,7 +2,7 @@
 
 ## Overview
 
-JavaCompiler is a versatile command-line utility designed to help Java developers compile and execute Java files effortlessly. Tailored to work with various Java project structures, including IntelliJ IDEA projects and Generic Java projects, this script offers an interactive menu for a seamless development experience outside of an IDE environment.
+JavaProjectManager is a versatile command-line utility designed to help Java developers compile and execute Java files effortlessly. Tailored to work with various Java project structures, including IntelliJ IDEA projects and Generic Java projects, this script offers an interactive menu for a seamless development experience outside of an IDE environment.
 
 ## Features
 
@@ -26,7 +26,7 @@ Ensure the required dependencies (`fzf`, `bat`, `javac`, and `java`) are install
 ## Usage
 
 ```bash
-`./JavaCompiler.sh [OPTIONS]`
+`./JavaProjectManager.zsh [OPTIONS]`
 ```
 
 ### Options
