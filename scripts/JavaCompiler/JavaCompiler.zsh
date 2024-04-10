@@ -1,10 +1,8 @@
 #!/bin/zsh
 
-# START OF SCRIPT ---------------------------------------------------
+# This script, JavaCompiler, serves as a versatile command-line utility for Java developers, facilitating the compilation and execution of Java files. It's designed to seamlessly interact with different Java project structures, specifically tailored for IntelliJ IDEA projects and Generic Java projects. Users benefit from an interactive menu that allows them to choose the project context or rerun previously executed files efficiently. The script ensures a clean working environment by managing temporary .class files, thus preventing clutter. Additionally, it offers robust error handling and presents compilation and execution errors in an easily understandable format. This utility is especially useful for developers looking for a quick and streamlined way to compile and test their Java code outside of an IDE.
 
-# JavaCompiler is a script that allows users to compile and run Java files from the command line. The script also includes functions to handle various project structures, such as IntelliJ IDEA and JavaProjects, allowing for easy integration into these development environments. Additionally, the script provides error handling and debugging information for both compilation and execution of Java programs.
-
-# Define some color codes
+# COLOR CODES
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -116,50 +114,53 @@ compile_and_run() {
     trap - SIGINT
 }
 
-
 jcr() {
     current_dir=$(pwd)
-    echo ""
-    echo -e "${BLUE}Select project structure or action:${NC}"
-    echo "1) IntelliJ IDEA"
-    echo "2) JavaProject"
-    if [ -f "$last_run_file" ]; then
-        java_file_path=$(cat "$last_run_file")
-        echo "3) Run Last File (${ORANGE}${java_file_path}${NC})"
-    fi
-    echo "4) Exit"
-    echo -n "> "
-    read -r project_structure
+    while true; do
+        echo ""
+        echo -e "${BLUE}Select project structure or action:${NC}"
+        echo "1) IntelliJ IDEA Project"
+        echo "2) Generic Java Project"
+        if [ -f "$last_run_file" ]; then
+            java_file_path=$(cat "$last_run_file")
+            echo "3) Re-run Last Executed File (${ORANGE}${java_file_path}${NC})"
+        fi
+        echo "4) Exit Script"
+        echo -n "> "
+        read -r project_structure
 
-    case $project_structure in
-        1)
-            handle_intellij_project "$current_dir"
-            ;;
+        case $project_structure in
+            1)
+                handle_intellij_project "$current_dir"
+                break
+                ;;
 
-        2)
-            handle_java_project "$current_dir"
-            ;;
+            2)
+                handle_java_project "$current_dir"
+                break
+                ;;
 
-        3)
-            if [ -f "$last_run_file" ]; then
-                java_file_path=$(cat "$last_run_file")
-                cd src || return # Change to src directory
-                compile_and_run "$java_file_path"
-                cd "$current_dir" || return
-            else
-                echo -e "${RED}No last file to run. Please select a project structure.${NC}"
-            fi
-            ;;
+            3)
+                if [ -f "$last_run_file" ]; then
+                    java_file_path=$(cat "$last_run_file")
+                    cd src || return # Change to src directory
+                    compile_and_run "$java_file_path"
+                    cd "$current_dir" || return
+                    break
+                else
+                    echo -e "${RED}No last file to run. Please select a project structure.${NC}"
+                fi
+                ;;
 
-        4) # Exit the script
-            echo -e "${GREEN}Exiting.${NC}"
-            exit
-            ;;
+            4) # Exit the script
+                echo -e "${GREEN}Exiting.${NC}"
+                exit
+                ;;
 
-        *)
-            echo -e "${RED}Invalid selection. Exiting.${NC}"
-            ;;
-    esac
+            *) echo -e "${RED}Invalid selection. Please try again.${NC}"
+                ;;
+        esac
+    done
 }
 
 handle_intellij_project() {
@@ -186,7 +187,6 @@ handle_intellij_project() {
     fi
 }
 
-
 handle_java_project() {
     current_dir=$1
     java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --preview-window right:60% --prompt="Select Java File: ")
@@ -206,5 +206,3 @@ main() {
 
 # Call the main function to start the script
 main "$@"
-
-# END OF SCRIPT ----------------------------------------------------
