@@ -21,7 +21,7 @@ done
 
 # ----------------------------- #
 
-version="1.0"
+version="2.0"
 help_message="${BLUE}Usage: $(basename "$0") [OPTIONS]
 ${NC}- ${ORANGE}IntelliJ IDEA Project:${NC} Run the script from the root directory of the IntelliJ IDEA project. 
   The script will navigate to the 'src' directory, where you can choose which Java source file 
