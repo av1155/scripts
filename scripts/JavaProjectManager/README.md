@@ -4,6 +4,36 @@
 
 JavaProjectManager is a versatile command-line utility designed to help Java developers compile and execute Java files effortlessly. Tailored to work with various Java project structures, including IntelliJ IDEA projects and Generic Java projects, this script offers an interactive menu for a seamless development experience outside of an IDE environment.
 
+## Homebrew Formula
+
+To install `JavaProjectManager.zsh` using Homebrew:
+
+1.  Tap the repository:
+
+    ```bash
+    brew tap av1155/scripts https://github.com/av1155/scripts
+    ```
+
+2.  Install the script:
+
+    ```bash
+    brew install javaprojectmanager
+    ```
+
+To uninstall:
+
+1.  Remove the script:
+
+    ```bash
+    brew uninstall javaprojectmanager
+    ```
+
+2.  Untap the repository (if not needed anymore):
+
+    ```bash
+    brew untap av1155/scripts
+    ```
+
 ## Features
 
 -   **Interactive Menu**: Easily select the project structure or specific actions to perform, enhancing user interaction.
@@ -26,7 +56,7 @@ Ensure the required dependencies (`fzf`, `bat`, `javac`, and `java`) are install
 ## Usage
 
 ```bash
-`./JavaProjectManager.zsh [OPTIONS]`
+jcr [OPTIONS]
 ```
 
 ### Options

@@ -6,18 +6,48 @@ This repository contains a collection of Bash scripts that I've created for
 various tasks. These scripts are designed to automate tasks, enhance
 productivity, and make life easier.
 
+## Homebrew Formula
+
+To install `JavaProjectManager.zsh` using Homebrew:
+
+1.  Tap the repository:
+
+    ```bash
+    brew tap av1155/scripts https://github.com/av1155/scripts
+    ```
+
+2.  Install the script:
+
+    ```bash
+    brew install javaprojectmanager
+    ```
+
+To uninstall:
+
+1.  Remove the script:
+
+    ```bash
+    brew uninstall javaprojectmanager
+    ```
+
+2.  Untap the repository (if not needed anymore):
+
+    ```bash
+    brew untap av1155/scripts
+    ```
+
 ## Scripts
 
 Here's a brief overview of the scripts included in this repository:
 
-1. `JavaCompiler.zsh`: This dynamic ZSH script is designed to compile and run Java files with ease. It supports various project structures, including IntelliJ IDEA and JavaProjects, and integrates smoothly into these environments. Key features include:
+1. `JavaProjectManager.zsh`: This dynamic ZSH script is engineered to streamline the compilation and execution of Java files. It's adept at accommodating various project structures like IntelliJ IDEA and generic Java files, seamlessly blending into these setups. Notable features encompass:
 
-    - Error handling and debugging information for both compilation and execution stages.
-    - Interactive file selection using fzf, enhanced by a file preview feature powered by bat.
-    - Capability to handle project-specific structures and clean up .class files post-execution.
-    - Stores the path of the last run file for easy recompilation and rerunning.
-    - Allows users to enter arguments for Java programs.
-    - Color-coded output for better readability and user experience.
+    - Comprehensive error handling and debugging with syntax-highlighted compilation errors for efficient issue identification and resolution during compilation and execution phases.
+    - Interactive file selection facilitated by `fzf`, augmented with a file preview functionality via `bat`.
+    - Proficiency in managing project-specific structures and tidying up `.class` files after execution.
+    - Memorization of the last executed file's path to simplify subsequent recompilation and reruns.
+    - Support for inputting arguments for Java programs, enhancing flexibility.
+    - Enhanced output with color-coding for improved clarity and user interaction.
 
 2. `JavaProject.zsh`: This script is a powerful tool for automating the creation of Java projects with Maven. It offers a range of features to streamline project setup and ensure proper structure. Key functionalities include:
 
