@@ -14,6 +14,13 @@ class Javaprojectmanager < Formula
     bin.install "JavaProjectManager.zsh" => "jcr"
   end
 
+  # This method provides additional information to the user post-installation
+  def caveats
+    <<~EOS
+      To run JavaProjectManager, use the 'jcr' command in your terminal.
+    EOS
+  end
+
   test do
     system "#{bin}/jcr", "--version"
   end
