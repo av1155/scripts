@@ -26,7 +26,7 @@ help_message="${BLUE}Usage: $(basename "$0") [OPTIONS]
 ${NC}- ${ORANGE}IntelliJ IDEA Project:${NC} Run the script from the root directory of the IntelliJ IDEA project. 
   The script will navigate to the 'src' directory, where you can choose which Java source file 
   to compile and run.
-${NC}- ${ORANGE}Generic Java Project:${NC} Run the script from a directory containing Java files. You will be 
+${NC}- ${ORANGE}Generic Java File:${NC} Run the script from a directory containing Java files. You will be 
   presented with a list of all Java files found within the directory. Select the Java file 
   you wish to compile and run.
 ${NC}- ${ORANGE}Argument Handling:${NC} The script allows you to provide arguments for the Java file you want to run.
