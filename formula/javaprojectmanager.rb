@@ -1,5 +1,5 @@
 class Javaprojectmanager < Formula
-  desc "A command-line tool for Java developers, offering a menu-driven interface with fuzzy finding for quick file compilation and execution, enhanced by automatic cleanup and syntax-highlighted errors."
+  desc "Easily compile and run Java files, manage cleanup, and view syntax-highlighted errors through a user-friendly fuzzy-finding menu."
   homepage "https://github.com/av1155/scripts"
   url "https://raw.githubusercontent.com/av1155/scripts/main/scripts/JavaProjectManager/JavaProjectManager.zsh"
   version "2.0.0"
