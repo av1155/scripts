@@ -202,3 +202,16 @@ else
 fi
 
 echo -e "${GREEN}All applicable packages and applications updated.${NC}"
+
+# Send an email with the log file if the script is run non-interactively
+if [ ! -t 0 ]; then
+	{
+    	echo "To: andrea.venti12@gmail.com"
+    	echo "From: andrea.venti12@gmail.com"
+    	echo "Subject: Package Updater Output"
+    	echo ""
+    	LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%H\%p).log"
+    	cat "$LOG_FILE"
+	} | msmtp -t
+fi
+
