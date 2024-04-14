@@ -135,12 +135,29 @@ update_npm() {
 
 # Function to update AstroNvim
 update_astronvim() {
-	echo -e "${BLUE}Updating AstroNvim...${NC}"
-	nvim --headless "+AstroUpdate" +qa
-	nvim --headless "+AstroMasonUpdateAll" +qa
-	nvim --headless "+Lazy sync" +qa
-	nvim --headless "+TSUpdate" +qa
-	echo -e "\n${ORANGE}====================================================================================${NC}"
+    local lazy_lock_file="$HOME/.config/nvim/lazy-lock.json"
+    local backup_file="/tmp/nvim-lazy-lock.json.backup"
+
+    # Backup the current config
+    cp "$lazy_lock_file" "$backup_file"
+
+    # Run update commands
+    echo -e "${BLUE}Updating AstroNvim...${NC}"
+    nvim --headless "+AstroUpdate" +qa
+    nvim --headless "+AstroMasonUpdateAll" +qa
+    nvim --headless "+Lazy sync" +qa
+    nvim --headless "+TSUpdate" +qa
+
+    # Check for differences
+    echo -e "\n${ORANGE}Checking for changes in lazy-lock.json...${NC}"
+    if diff -u "$backup_file" "$lazy_lock_file" | grep '^\(+\|-\)' | grep -v '^+++' | grep -v '^---'; then
+        echo -e "${RED}Changes detected in lazy-lock.json:${NC}"
+        diff -u "$backup_file" "$lazy_lock_file" | grep '^\(+\|-\)' | grep -v '^+++' | grep -v '^---' | bat -l json
+    else
+        echo -e "${GREEN}No changes detected in lazy-lock.json.${NC}"
+    fi
+
+    echo -e "${ORANGE}====================================================================================${NC}"
 }
 
 # MAIN SCRIPT ===================================================================
