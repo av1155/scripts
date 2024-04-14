@@ -210,7 +210,7 @@ if [ ! -t 0 ]; then
     	echo "From: andrea.venti12@gmail.com"
     	echo "Subject: Package Updater Output"
     	echo ""
-    	LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%H\%p).log"
+    	LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-05\%p).log"
     	cat "$LOG_FILE"
 	} | msmtp -t
 fi
