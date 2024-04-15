@@ -3,12 +3,13 @@ class Javaprojectmanager < Formula
   homepage "https://github.com/av1155/scripts"
   url "https://raw.githubusercontent.com/av1155/scripts/main/scripts/JavaProjectManager/JavaProjectManager.zsh"
   version "2.1.0"
-  sha256 "1ca9457f2577f68e92a0854a19cb489c0fa7a29c042cedcca1893e78198b9573"
+  sha256 "5414d8cb4247c1826388aa715fcce2b939ea292f59fb98988b33e9bc7d2e43d3"
   license "MIT"
 
   depends_on "fzf"
   depends_on "bat"
   depends_on "openjdk"
+  depends_on "maven"
 
   def install
     bin.install "JavaProjectManager.zsh" => "jcr"
