@@ -232,10 +232,10 @@ update_astronvim() {
 # Function to manage log files
 manage_log_files() {
     local log_dir="/Users/andreaventi/scripts/logs"
-    local max_logs=30  # Set the maximum number of log files to keep
+    local max_logs=14  # Set the maximum number of log files to keep
 
-    echo "Changing to directory: $log_dir"
-    cd "$log_dir"  # Navigate to the log directory
+    echo_color $BLUE "Changing to directory: $log_dir"
+    cd "$log_dir"
 
     # List all log files sorted by modification time
     local log_files=($(ls -t upall_*.log 2>/dev/null))
