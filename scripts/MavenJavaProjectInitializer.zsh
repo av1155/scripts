@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-# JavaProject Generator
+# Maven Java Project Initializer
 
 # Define some color codes
 RED='\033[0;31m'
