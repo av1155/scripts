@@ -187,8 +187,8 @@ jcr() {
         echo "2) IntelliJ Maven Project"
         echo "3) Generic Java File"
         if [ -f "$last_run_file" ]; then
-            java_file_path=$(cat "$last_run_file")
-            echo "4) Re-run Last Executed File (${ORANGE}${java_file_path}${NC})"
+            last_java_file_path=$(cat "$last_run_file")
+            echo "4) Re-run Last Executed File (${ORANGE}${last_java_file_path}${NC})"
         fi
         echo "0) Exit Script"
         echo -n "> "
@@ -209,8 +209,14 @@ jcr() {
                 ;;
             4)
                 if [ -f "$last_run_file" ]; then
-                    java_file_path=$(cat "$last_run_file")
-                    compile_and_run "$java_file_path"
+                    # Correctly parse and navigate to the directory of the last executed file
+                    java_file_dir=$(dirname "$last_java_file_path")
+                    if [[ $java_file_dir != /* ]]; then
+                        java_file_dir="$current_dir/src/main/java/$java_file_dir"
+                    fi
+                    cd "$java_file_dir" || { echo -e "${RED}Failed to change directory. Exiting.${NC}"; return; }
+                    compile_and_run "$(basename "$last_java_file_path")"
+                    cd "$current_dir" || return
                     break
                 else
                     echo -e "${RED}No last file to run. Please select a project structure.${NC}"
@@ -226,25 +232,25 @@ jcr() {
     done
 }
 
-handle_intellij_project() {
-    current_dir=$1
-    # Check if the 'src' directory exists
-    if [ ! -d "src" ]; then
-        echo -e "${RED}Error: 'src' directory not found in the current location.${NC}"
-        echo -e "${RED}Please run the script from the root of your IntelliJ IDEA project.${NC}"
+handle_intellij_maven_project() {
+    local current_dir=$1
+    # Ensure the script is run from the root of the Maven project
+    if [ ! -f "pom.xml" ]; then
+        echo -e "${RED}Error: 'pom.xml' not found in the current location.${NC}"
+        echo -e "${RED}Please run the script from the root of your IntelliJ Maven project.${NC}"
         return 1
     fi
 
-    # IntelliJ IDEA project structure
-    cd src || return
+    # Navigate to the source directory
+    cd src/main/java || return
 
-    # Find the relative path of the java file from the 'src' directory
+    # Find the relative path of the java file from the 'src/main/java' directory
     java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --preview-window right:60% --prompt="Select Java File: ")
 
     if [ -n "$java_file_path" ]; then
-        java_file_path="${java_file_path#./}"
+        java_file_path="${java_file_path#./}" # Remove leading './'
         compile_and_run "$java_file_path"
-        cd "$current_dir" || return
+        cd "$current_dir" || return # Return to the original directory
     else
         echo -e "${RED}No Java file selected. Exiting.${NC}"
     fi
