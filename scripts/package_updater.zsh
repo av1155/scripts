@@ -105,10 +105,10 @@ update_mas() {
     if command_exists mas; then
         echo_color $BLUE "Updating Mac App Store applications..."
         local outdated_apps=$(mas outdated)
-        echo "$outdated_apps"
+        echo_color $ORANGE "$outdated_apps"
 
         # Define an array of app IDs to ignore
-        local ignore_list=("1365531024" "appID2" "appID3")  # Add app IDs here
+        local ignore_list=("1365531024" "appID2" "appID3" "etc")  # Add app IDs here
 
         # Loop through each outdated app and update if not in the ignore list
         echo "$outdated_apps" | while read -r line; do
@@ -117,7 +117,17 @@ update_mas() {
 
             # Check if the app ID is in the ignore list
             if [[ ! "${ignore_list[@]}" =~ "$app_id" ]]; then
-                echo "Updating $app_name..."
+                # Quit the app using AppleScript before updating
+                echo_color $BLUE "Quitting $app_name..."
+                osascript -e "tell application \"$app_name\" to quit"
+                if [ "$?" -ne 0 ]; then
+                    echo_color $RED "Failed to quit $app_name."
+                fi
+
+                # Wait a little for the application to quit properly
+                sleep 3
+
+                echo_color $GREEN "Updating $app_name..."
                 mas upgrade $app_id
             else
                 echo_color $PURPLE "Skipping $app_name..."
@@ -217,12 +227,12 @@ update_astronvim() {
 
     	# Check for differences
     	echo_color $ORANGE "\nChecking for changes in lazy-lock.json..."
-    	local changes=$(diff -u "$backup_file" "$lazy_lock_file" | grep '^\(+\|-\)' | grep -v '^+++' | grep -v '^---')
+    	local changes=$(diff -u "$backup_file" "$lazy_lock_file" | grep '^\+' | grep -v '^+++' | grep -v '^---')
     	if [ -n "$changes" ]; then
-        	echo_color $RED "Changes detected in lazy-lock.json:"
+        	echo_color $GREEN "Changes detected in lazy-lock.json:"
         	echo "$changes" | bat -l json
     	else
-        	echo_color $GREEN "No changes detected in lazy-lock.json."
+        	echo_color $BLUE "No changes detected in lazy-lock.json."
     	fi
 
         echo_color $ORANGE "====================================================================================\n"
@@ -239,7 +249,7 @@ manage_log_files() {
     local log_dir="/Users/andreaventi/scripts/logs"
     local max_logs=14  # Set the maximum number of log files to keep
 
-    echo_color $BLUE "Changing to directory: $log_dir"
+    echo_color $BLUE "Managing log files in scripts/logs..."
     cd "$log_dir"
 
     # List all log files sorted by modification time
@@ -266,7 +276,14 @@ manage_log_files() {
 
 # Send an email with the log file if the script is run non-interactively
 send_update_report() {
-    LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-05\%p).log"
+    if [ -f "/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IPM).log" ]; then
+        LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IPM).log"
+    fi
+
+    if [ -f "/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IAM).log" ]; then
+        LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IAM).log"
+    fi
+
     if [ -f "$LOG_FILE" ]; then
         {
             echo "To: andrea.venti12@gmail.com"
@@ -276,7 +293,7 @@ send_update_report() {
             cat "$LOG_FILE"
         } | msmtp -t
     else
-        echo "Log file not found: $LOG_FILE" >&2
+        echo_color $RED "Log file not found: $LOG_FILE" >&2
     fi
 }
 
@@ -290,7 +307,7 @@ main() {
     update_node
     update_npm
     update_astronvim
-    echo_color $GREEN "All applicable packages and applications updated."
+    echo_color $GREEN "All applicable packages and applications updated.\n"
 
     # Manage log files to keep only the most recent $max_logs
     manage_log_files
