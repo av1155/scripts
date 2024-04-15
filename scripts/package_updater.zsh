@@ -52,6 +52,11 @@ update_homebrew() {
         brew upgrade
         brew cleanup
         brew autoremove
+        cd "/Users/andreaventi/.dotfiles"
+        rm Brewfile
+        brew bundle dump --describe --no-lock
+        cd -
+
         echo_color $ORANGE "====================================================================================\n"
     else
         echo_color $RED "Homebrew not found. Skipping..."
