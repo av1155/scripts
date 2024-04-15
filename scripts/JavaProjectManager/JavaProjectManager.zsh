@@ -101,15 +101,16 @@ compile_and_run() {
     # Set the trap with a check to ensure cleanup runs only once
     trap 'cleanup' SIGINT
 
-    java_file_path=$1
+    java_file_path=$1 # The path of the Java file to compile and run
+    project_type=$2 # The type of project structure (IntelliJ, Maven, or Generic)
 
     # Update the last run file and current directory for cleanup
-    # Ensure last_run_file exists
     if [ ! -f "$last_run_file" ]; then
         touch "$last_run_file" || { echo -e "${RED}Failed to create $last_run_file.${NC}"; exit 1; }
     fi
-    echo "$java_file_path" > "$last_run_file" || { echo -e "${RED}Failed to write to $last_run_file.${NC}"; return 1; }
+    echo "${java_file_path}:${project_type}" > "$last_run_file" || { echo -e "${RED}Failed to write to $last_run_file.${NC}"; return 1; }
 
+    # Store the directory of the Java file for cleanup
     current_java_file_dir=$(pwd)/$(dirname "$java_file_path")
 
     # Compilation logic
@@ -199,59 +200,79 @@ jcr() {
                 handle_intellij_project "$current_dir"
                 break
                 ;;
+
             2)
                 handle_intellij_maven_project "$current_dir"
                 break
                 ;;
+
             3)
                 handle_java_file "$current_dir"
                 break
                 ;;
+
             4)
                 if [ -f "$last_run_file" ]; then
-                    last_java_file_path=$(cat "$last_run_file")
-                    # Construct the full path to the java file
-                    java_file_dir="${current_dir}/src/main/java"
-                    java_file_path="${java_file_dir}/${last_java_file_path}"
+                    read last_java_file_info < "$last_run_file"
+                    last_java_file_path=$(echo $last_java_file_info | cut -d':' -f1)  # Extract file path
+                    project_type=$(echo $last_java_file_info | cut -d':' -f2)  # Extract project type
+
+                    case $project_type in
+                        "Maven")
+                            java_file_dir="${current_dir}/src/main/java"
+                            ;;
+                        "IntelliJ")
+                            java_file_dir="${current_dir}/src"
+                            ;;
+                        "Generic")
+                            java_file_dir="$current_dir"
+                            ;;
+                        *)
+                            java_file_dir="$current_dir"  # Default or error handling
+                            ;;
+                    esac
                     
                     cd "$java_file_dir" || { echo -e "${RED}Failed to change directory to $java_file_dir. Exiting.${NC}"; return; }
                     
-                    compile_and_run "$last_java_file_path"
+                    compile_and_run "$last_java_file_path" "$project_type"
                     cd "$current_dir" || return
                     break
                 else
                     echo -e "${RED}No last file to run. Please select a project structure.${NC}"
                 fi
                 ;;
+
             0) # Exit the script
                 echo -e "${GREEN}Exiting.${NC}"
                 exit
                 ;;
+
             *) echo -e "${RED}Invalid selection. Please try again.${NC}"
                 ;;
+
         esac
     done
 }
 
-handle_intellij_maven_project() {
-    local current_dir=$1
-    # Ensure the script is run from the root of the Maven project
-    if [ ! -f "pom.xml" ]; then
-        echo -e "${RED}Error: 'pom.xml' not found in the current location.${NC}"
-        echo -e "${RED}Please run the script from the root of your IntelliJ Maven project.${NC}"
+handle_intellij_project() {
+    current_dir=$1
+    # Check if the 'src' directory exists
+    if [ ! -d "src" ]; then
+        echo -e "${RED}Error: 'src' directory not found in the current location.${NC}"
+        echo -e "${RED}Please run the script from the root of your IntelliJ IDEA project.${NC}"
         return 1
     fi
 
-    # Navigate to the source directory
-    cd src/main/java || return
+    # IntelliJ IDEA project structure
+    cd src || return
 
-    # Find the relative path of the java file from the 'src/main/java' directory
+    # Find the relative path of the java file from the 'src' directory
     java_file_path=$(find . -name "*.java" | fzf --preview 'bat --color=always --style=header-filename {}' --preview-window right:60% --prompt="Select Java File: ")
 
     if [ -n "$java_file_path" ]; then
-        java_file_path="${java_file_path#./}" # Remove leading './'
-        compile_and_run "$java_file_path"
-        cd "$current_dir" || return # Return to the original directory
+        java_file_path="${java_file_path#./}"
+        compile_and_run "$java_file_path" "IntelliJ"
+        cd "$current_dir" || return
     else
         echo -e "${RED}No Java file selected. Exiting.${NC}"
     fi
@@ -274,7 +295,7 @@ handle_intellij_maven_project() {
 
     if [ -n "$java_file_path" ]; then
         java_file_path="${java_file_path#./}" # Remove leading './'
-        compile_and_run "$java_file_path"
+        compile_and_run "$java_file_path" "Maven"
         cd "$current_dir" || return # Return to the original directory
     else
         echo -e "${RED}No Java file selected. Exiting.${NC}"
@@ -287,7 +308,7 @@ handle_java_file() {
 
     if [ -n "$java_file_path" ]; then
         java_file_path="${java_file_path#./}"
-        compile_and_run "$java_file_path"
+        compile_and_run "$java_file_path" "Generic"
     else
         echo -e "${RED}No Java file selected. Exiting.${NC}"
     fi
