@@ -21,11 +21,16 @@ done
 
 # ----------------------------- #
 
-version="2.0.0"
+version="2.1.0"
 help_message="${BLUE}Usage: $(basename "$0") [OPTIONS]
 ${NC}- ${ORANGE}IntelliJ IDEA Project:${NC} Run the script from the root directory of the IntelliJ IDEA project. 
   The script will navigate to the 'src' directory, where you can choose which Java source file 
   to compile and run.
+${NC}- ${ORANGE}Maven Project:${NC} Run the script from the root directory of the Maven project.
+  The script will navigate to the 'src/main/java' directory, where you can choose which Java source file
+  to compile and run. Ensure the 'pom.xml' file is present in the directory.
+${NC}- ${ORANGE}Maven Test:${NC} Run the script from the root directory of the Maven project.
+  The script will run the 'mvn test' command to execute the tests.
 ${NC}- ${ORANGE}Generic Java File:${NC} Run the script from a directory containing Java files. You will be 
   presented with a list of all Java files found within the directory. Select the Java file 
   you wish to compile and run.
@@ -56,45 +61,48 @@ done
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 # Path for storing the last run file relative to the script's location
 last_run_file="${script_dir}/last_run.txt"
-
 # Global variable to hold the directory of the currently processed Java file
 current_java_file_dir=""
 
-# Improved Cleanup Function
 cleanup() {
     echo -e "\n${RED}Execution interrupted. Cleaning up...${NC}"
-    if [[ -n "$current_java_file_dir" && -d "$current_java_file_dir" ]]; then
-        # Use a nullglob option to handle the case where no .class files are found
-        setopt local_options nullglob
-        class_files=("${current_java_file_dir}"/*.class)
-
-        if [[ ${#class_files[@]} -eq 0 ]]; then
-            echo -e "${GREEN}No .class files found in $current_java_file_dir. No cleanup needed.${NC}"
-        else
-            for class_file in "${class_files[@]}"; do
-                if rm -f "$class_file"; then
-                    # Extracting just the directory and file name, excluding the full path
-                    dir_name=$(dirname "$class_file")
-                    base_name=$(basename "$class_file")
-                    short_path="${dir_name##*/}/$base_name"
-                    echo -e "${GREEN}Deleted ${short_path}${NC}"
-                else
-                    # Similar extraction for the failed deletion case
-                    dir_name=$(dirname "$class_file")
-                    base_name=$(basename "$class_file")
-                    short_path="${dir_name##*/}/$base_name"
-                    echo -e "${RED}Failed to delete ${short_path}${NC}"
-                fi
-            done
-            echo -e "${GREEN}Cleanup completed.${NC}"
+    
+    if [ -f "$last_run_file" ]; then
+        if ! read last_java_file_info < "$last_run_file"; then
+            echo -e "${RED}Failed to read the last run file.${NC}"
+            return 1
         fi
+        project_type=$(echo "$last_java_file_info" | cut -d':' -f2)
 
-        # Update the flag to prevent repeated cleanup operations
-        cleanup_executed=true
+        case $project_type in
+            "Maven")
+                base_dir="${current_dir}/src/main/java"
+                ;;
+            "IntelliJ")
+                base_dir="${current_dir}/src"
+                ;;
+            "Generic")
+                base_dir="$current_dir"
+                ;;
+            *)
+                echo -e "${RED}Unrecognized project type for cleanup.${NC}"
+                base_dir="$current_dir"
+                ;;
+        esac
     else
-        echo -e "${RED}No valid directory set for cleanup or directory does not exist.${NC}"
+        echo -e "${RED}No last run file found for cleanup.${NC}"
+        return 1
     fi
-    exit
+
+    echo -e "${ORANGE}Starting cleanup of .class files from: ${base_dir}${NC}"
+
+    if ! find "$base_dir" -type f -name '*.class' -exec bash -c 'BLUE="\033[0;34m"; NC="\033[0m"; echo -e "${BLUE}Deleting $(echo "$2" | sed "s|$1||")${NC}"' _ "$base_dir" '{}' \; -delete; then
+        echo -e "${RED}Cleanup failed.${NC}"
+        return 1
+    fi
+
+    echo -e "${GREEN}Cleanup completed; all .class files removed from ${base_dir}.${NC}"
+    exit 0
 }
 
 compile_and_run() {
@@ -165,14 +173,13 @@ compile_and_run() {
 
     if ! "${run_command[@]}"; then
         echo -e "${RED}Execution failed.${NC}"
-        cleanup
+        cleanup > /dev/null 2>&1
         trap - SIGINT
         return 1
     fi
 
-    # Delete all .class files in the directory of the .java file after successful execution
-    class_file_dir=$(dirname "$java_file_path")
-    rm ${class_file_dir}/*.class
+    # Delete all .class files in the directory of the project after successful execution
+    cleanup > /dev/null 2>&1
 
     # Cleanup logic is only triggered upon receiving SIGINT (Ctrl+C)
     # If the script reaches this point without interruption, clear the trap
@@ -191,6 +198,7 @@ jcr() {
             last_java_file_path=$(cat "$last_run_file")
             echo "4) Re-run Last Executed File (${ORANGE}${last_java_file_path}${NC})"
         fi
+        echo "5) Maven Test"
         echo "0) Exit Script"
         echo -n "> "
         read -r project_structure
@@ -228,7 +236,7 @@ jcr() {
                             java_file_dir="$current_dir"
                             ;;
                         *)
-                            java_file_dir="$current_dir"  # Default or error handling
+                            java_file_dir="$current_dir"  # Default
                             ;;
                     esac
                     
@@ -240,6 +248,21 @@ jcr() {
                 else
                     echo -e "${RED}No last file to run. Please select a project structure.${NC}"
                 fi
+                ;;
+
+            5)
+                if [ ! -f "pom.xml" ]; then
+                    echo -e "${RED}Error: 'pom.xml' not found in the current location.${NC}"
+                    echo -e "${RED}Please run the script from the root of your Maven project.${NC}"
+                    break
+                fi
+                echo -e "\n${BLUE}Running Maven Test...${NC}"
+                if ! command -v mvn &> /dev/null; then
+                    echo -e "${RED}Error: 'mvn' is not installed. Please install Maven to use this feature.${NC}"
+                    break
+                fi
+                mvn test
+                break
                 ;;
 
             0) # Exit the script
