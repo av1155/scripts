@@ -122,7 +122,7 @@ compile_and_run() {
         echo -e "${RED}Compilation failed.${NC}\n"
         if command -v bat >/dev/null 2>&1; then
             echo -e "${RED}Compilation errors:${NC}"
-            bat --language=java --style=plain compile_errors.txt
+            bat --language=bash --style=plain compile_errors.txt
         else
             echo -e "${RED}Compilation errors:${NC}"
             cat compile_errors.txt
@@ -209,13 +209,14 @@ jcr() {
                 ;;
             4)
                 if [ -f "$last_run_file" ]; then
-                    # Correctly parse and navigate to the directory of the last executed file
-                    java_file_dir=$(dirname "$last_java_file_path")
-                    if [[ $java_file_dir != /* ]]; then
-                        java_file_dir="$current_dir/src/main/java/$java_file_dir"
-                    fi
-                    cd "$java_file_dir" || { echo -e "${RED}Failed to change directory. Exiting.${NC}"; return; }
-                    compile_and_run "$(basename "$last_java_file_path")"
+                    last_java_file_path=$(cat "$last_run_file")
+                    # Construct the full path to the java file
+                    java_file_dir="${current_dir}/src/main/java"
+                    java_file_path="${java_file_dir}/${last_java_file_path}"
+                    
+                    cd "$java_file_dir" || { echo -e "${RED}Failed to change directory to $java_file_dir. Exiting.${NC}"; return; }
+                    
+                    compile_and_run "$last_java_file_path"
                     cd "$current_dir" || return
                     break
                 else
