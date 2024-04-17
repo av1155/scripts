@@ -276,12 +276,12 @@ manage_log_files() {
 
 # Send an email with the log file if the script is run non-interactively
 send_update_report() {
-    if [ -f "/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IPM).log" ]; then
-        LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IPM).log"
-    fi
-
     if [ -f "/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IAM).log" ]; then
         LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IAM).log"
+    fi
+
+    if [ -f "/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IPM).log" ]; then
+        LOG_FILE="/Users/andreaventi/scripts/logs/upall_$(date +\%Y-\%m-\%d-\%IPM).log"
     fi
 
     if [ -f "$LOG_FILE" ]; then
