@@ -1,5 +1,5 @@
 #!/bin/bash
-cat << EOF
+cat <<EOF
 Vim Surround Keymaps
 
 The three "core" operations of add/delete/change with the Vim Surround plugin can be done using the keymaps ys{motion}{char}, ds{char}, and cs{target}{replacement}, respectively.
