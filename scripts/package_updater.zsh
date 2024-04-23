@@ -231,6 +231,7 @@ update_astronvim() {
 		nvim --headless "+AstroMasonUpdateAll" +qa
 		nvim --headless "+Lazy sync" +qa
 		nvim --headless "+TSUpdate" +qa
+		nvim --headless "+TSUpdateSync" +qa
 
 		# Check for differences
 		echo_color $ORANGE "\nChecking for changes in lazy-lock.json..."
