@@ -249,6 +249,41 @@ update_astronvim() {
 	fi
 }
 
+# Update Java
+update_java() {
+	# ARM architecture (Apple Silicon)
+	JDK_URL="https://download.oracle.com/java/22/latest/jdk-22_macos-aarch64_bin.tar.gz"
+
+	# Define the download and extraction location
+	DOWNLOAD_LOCATION="$HOME/Downloads"
+	EXTRACT_LOCATION="$DOWNLOAD_LOCATION/jdk_extract"
+
+	# Create a directory to extract the tarball
+	mkdir -p "$EXTRACT_LOCATION"
+
+	# Download the tar.gz file to the extraction directory
+	echo_color $ORANGE "Downloading and extracting JDK..."
+	curl -L $JDK_URL | tar -xz -C "$EXTRACT_LOCATION"
+
+	# Determine the name of the top-level directory in the extracted location
+	JDK_DIR_NAME=$(ls "$EXTRACT_LOCATION" | grep 'jdk')
+
+	# Check if this directory already exists in the target directory
+	if [ ! -d "$HOME/Library/Java/JavaVirtualMachines/$JDK_DIR_NAME" ]; then
+		echo_color $GREEN "Installing Java..."
+		# Move the JDK directory to the Java Virtual Machines directory
+		mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
+		echo_color $GREEN "Java installed successfully."
+	else
+		echo_color $BLUE "Java is already installed. No action taken."
+		# Remove the extracted JDK if already installed
+		rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
+	fi
+
+	# Remove the extraction directory if empty
+	rmdir "$EXTRACT_LOCATION"
+}
+
 # MAIN SCRIPT =====================================================================
 
 # Function to manage log files
@@ -313,6 +348,7 @@ main() {
 	update_node
 	update_npm
 	update_astronvim
+	# update_java # UNCOMMENT TO UPDATE JAVA
 	echo_color $GREEN "All applicable packages and applications updated.\n"
 
 	# Manage log files to keep only the most recent $max_logs
