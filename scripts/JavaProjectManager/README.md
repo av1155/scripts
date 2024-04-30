@@ -2,7 +2,7 @@
 
 ## Overview
 
-JavaProjectManager is a versatile command-line utility designed to help Java developers compile and execute Java files effortlessly. Tailored to work with various Java project structures, including IntelliJ IDEA projects and Generic Java projects, this script offers an interactive menu for a seamless development experience outside of an IDE environment.
+JavaProjectManager is a versatile command-line utility designed to help Java developers compile and execute Java files effortlessly. Tailored to work with various Java project structures, including IntelliJ IDEA projects, Maven projects, and Generic Java projects, this script offers an interactive menu for a seamless development experience outside of an IDE environment.
 
 ## Homebrew Formula
 
@@ -37,10 +37,11 @@ To uninstall:
 ## Features
 
 -   **Interactive Menu**: Easily select the project structure or specific actions to perform, enhancing user interaction.
--   **Multiple Project Support**: Works with different Java project structures, particularly focusing on IntelliJ IDEA and generic Java projects.
+-   **Multiple Project Support**: Supports IntelliJ IDEA, Maven, and generic Java projects.
 -   **Argument Handling**: Facilitates passing arguments to the Java program being executed, directly from the command line.
 -   **Clean Environment**: Manages and cleans up temporary `.class` files to maintain a clutter-free workspace.
 -   **Error Handling**: Robust error handling mechanisms are in place, providing clear and understandable compilation and execution error messages.
+-   **Maven Integration**: Allows for the execution of Maven commands, including `mvn test`, directly within the script.
 
 ## Dependencies
 
@@ -48,10 +49,11 @@ To uninstall:
 -   `bat`: For enhanced file content display.
 -   `javac`: Java compiler for compiling Java files.
 -   `java`: Java runtime for executing compiled Java programs.
+-   `mvn`: Maven command-line tool (for Maven project support).
 
 ## Installation
 
-Ensure the required dependencies (`fzf`, `bat`, `javac`, and `java`) are installed on your system. You can typically install these through your package manager on Linux or Homebrew on macOS.
+Ensure the required dependencies (fzf, bat, javac, java, and mvn for Maven projects) are installed on your system. You can typically install these through your package manager on Linux or Homebrew on macOS.
 
 ## Usage
 
@@ -67,8 +69,9 @@ jcr [OPTIONS]
 ### Interactive Menu
 
 1.  **IntelliJ IDEA Project**: Select this option to compile and run files from an IntelliJ IDEA project.
-2.  **Generic Java Project**: Choose this for generic Java projects not tied to any specific IDE or structure.
-3.  **Re-run Last Executed File**: Quickly re-execute the last file without navigating through the menu.
+2.  **Maven Project**: Choose this to compile and run files from a Maven project. This includes support for running Maven tests (`mvn test`).
+3.  **Generic Java Project**: Choose this for generic Java projects not tied to any specific IDE or structure.
+4.  **Re-run Last Executed File**: Quickly re-execute the last file without navigating through the menu.
 
 ### Argument Handling
 
