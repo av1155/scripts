@@ -103,7 +103,7 @@ update_mas() {
 		echo_color $ORANGE "$outdated_apps"
 
 		# Define an array of app IDs to ignore
-		local ignore_list=("1365531024" "appID2" "appID3" "etc") # Add app IDs here
+		local ignore_list=("1365531024" "1444383602" "appID3" "etc") # Add app IDs here - Find with `mas list`
 
 		# Loop through each outdated app and update if not in the ignore list
 		echo "$outdated_apps" | while read -r line; do
