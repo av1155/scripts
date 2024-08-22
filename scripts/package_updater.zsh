@@ -344,10 +344,10 @@ main() {
 	update_homebrew
 	update_conda_environments
 	update_omz
-	update_mas
+	# update_mas
 	update_node
 	update_npm
-	update_astronvim
+	# update_astronvim
 	# update_java # UNCOMMENT TO UPDATE JAVA
 	echo_color $GREEN "All applicable packages and applications updated.\n"
 
