@@ -84,6 +84,22 @@ update_conda_environments() {
 	fi
 }
 
+# Backup Conda environments
+backup_conda_environments() {
+	BACKUP_DIR="${HOME}/CondaBackup"
+	mkdir -p "$BACKUP_DIR"
+
+	echo_color $BLUE "Backing up all Conda environments to $BACKUP_DIR..."
+
+	for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
+		echo_color $GREEN "\nBacking up environment $env..."
+		conda env export --name "$env" >"$BACKUP_DIR/${env}.yml"
+	done
+
+	echo_color $GREEN "\nAll Conda environments have been backed up to $BACKUP_DIR."
+	echo_color $ORANGE "====================================================================================\n"
+}
+
 # Update Oh My Zsh
 update_omz() {
 	if [ -d "$HOME/.oh-my-zsh" ]; then
@@ -343,6 +359,7 @@ send_update_report() {
 main() {
 	update_homebrew
 	update_conda_environments
+	backup_conda_environments
 	update_omz
 	# update_mas
 	update_node
