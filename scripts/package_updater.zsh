@@ -190,7 +190,7 @@ update_npm() {
 	if command_exists npm; then
 		if [ -t 0 ]; then
 			# Interactive mode
-			echo_color $BLUE "Do you want to update npm? (y/n)"
+			echo_color $BLUE "Do you want to update npm global packages? (y/N)"
 			# Set a 10-second timeout for user response
 			read -r -t 10 update_choice
 			if [[ $? -eq 0 ]] && [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
