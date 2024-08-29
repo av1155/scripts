@@ -87,7 +87,15 @@ update_conda_environments() {
 # Backup Conda environments
 backup_conda_environments() {
 	BACKUP_DIR="${HOME}/CondaBackup"
-	mkdir -p "$BACKUP_DIR"
+
+	# Check if the backup directory exists
+	if [ ! -d "$BACKUP_DIR" ]; then
+		echo_color $BLUE "CondaBackup directory not found. Cloning from GitHub..."
+		git clone https://github.com/av1155/CondaBackup.git "$BACKUP_DIR" || {
+			echo_color $RED "Failed to clone CondaBackup repository."
+			exit 1
+		}
+	fi
 
 	echo_color $BLUE "Backing up all Conda environments to $BACKUP_DIR..."
 
