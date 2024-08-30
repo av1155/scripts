@@ -374,6 +374,7 @@ main() {
 	update_npm
 	# update_astronvim
 	# update_java # UNCOMMENT TO UPDATE JAVA
+	gh extension upgrade gh-copilot
 	echo_color $GREEN "All applicable packages and applications updated.\n"
 
 	# Manage log files to keep only the most recent $max_logs
