@@ -65,11 +65,8 @@ update_homebrew() {
 update_conda_environments() {
 	if command_exists conda; then
 		echo_color $BLUE "Updating all Conda environments..."
-		echo_color $GREEN "\nActivating and updating base..."
-		conda update --all -y
-		conda clean --all -y
 
-		for env in $(conda env list | awk '{print $1}' | grep -vE '^\#|base'); do
+		for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
 			echo_color $GREEN "\nActivating and updating $env..."
 			conda activate $env
 			conda update --all -y
@@ -77,7 +74,9 @@ update_conda_environments() {
 			conda deactivate
 		done
 
-		echo_color $GREEN "All Conda environments have been updated."
+		conda activate base
+
+		echo_color $GREEN "\nAll Conda environments have been updated."
 		echo_color $ORANGE "====================================================================================\n"
 	else
 		echo_color $RED "miniforge not found. Skipping..."
@@ -87,6 +86,17 @@ update_conda_environments() {
 # Backup Conda environments
 backup_conda_environments() {
 	BACKUP_DIR="${HOME}/CondaBackup"
+
+	# Check if git and conda are installed
+	if ! command -v git &>/dev/null; then
+		echo_color $RED "git is not installed. Please install git first."
+		exit 1
+	fi
+
+	if ! command -v conda &>/dev/null; then
+		echo_color $RED "conda is not installed. Please install conda first."
+		exit 1
+	fi
 
 	# Check if the backup directory exists
 	if [ ! -d "$BACKUP_DIR" ]; then
@@ -101,10 +111,33 @@ backup_conda_environments() {
 
 	for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
 		echo_color $GREEN "\nBacking up environment $env..."
-		conda env export --name "$env" >"$BACKUP_DIR/${env}.yml"
+		conda env export --name "$env" >"$BACKUP_DIR/${env}.yml" || {
+			echo_color $RED "Failed to back up environment $env."
+			exit 1
+		}
 	done
 
 	echo_color $GREEN "\nAll Conda environments have been backed up to $BACKUP_DIR."
+
+	# Push changes to GitHub
+	echo_color $BLUE "Pushing changes to GitHub..."
+	cd "$BACKUP_DIR" || {
+		echo_color $RED "Failed to change to the backup directory."
+		exit 1
+	}
+
+	git add .
+	git commit -m "Backup Conda environments on $(date +'%Y-%m-%d %H:%M:%S')"
+	if [ $? -eq 0 ]; then
+		git push || {
+			echo_color $RED "Failed to push changes to GitHub."
+			exit 1
+		}
+	else
+		echo_color $GREEN "No changes to commit."
+	fi
+	cd -
+
 	echo_color $ORANGE "====================================================================================\n"
 }
 

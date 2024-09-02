@@ -12,13 +12,13 @@ NC='\033[0m' # No Color
 
 # Function to check if a command exists
 command_exists() {
-	command -v "$1" >/dev/null 2>&1
+    command -v "$1" >/dev/null 2>&1
 }
 
 echo_color() {
-	color_code="$1"
-	shift
-	echo -e "${color_code}$@${NC}"
+    color_code="$1"
+    shift
+    echo -e "${color_code}$@${NC}"
 }
 
 # PACKAGE UPDATE FUNCTIONS ========================================================
@@ -67,65 +67,84 @@ update_cargo() {
 
 # Update Oh My Zsh
 update_omz() {
-	if [ -d "$HOME/.oh-my-zsh" ]; then
-		"$ZSH/tools/upgrade.sh"
-		"$ZSH/tools/changelog.sh"
-		echo_color $GREEN "\nOh My Zsh has been updated."
-		echo_color $ORANGE "====================================================================================\n"
-	else
-		echo_color $RED "Oh My Zsh not found. Skipping..."
-	fi
+    if [ -d "$HOME/.oh-my-zsh" ]; then
+        "$ZSH/tools/upgrade.sh"
+        "$ZSH/tools/changelog.sh"
+        echo_color $GREEN "\nOh My Zsh has been updated."
+        echo_color $ORANGE "====================================================================================\n"
+    else
+        echo_color $RED "Oh My Zsh not found. Skipping..."
+    fi
 }
 
-# Function to update all Conda environments, including the base environment
+# Update miniforge + Conda environments
 update_conda_environments() {
-	if command_exists conda; then
-		echo_color $BLUE "Updating all Conda environments..."
-		echo_color $GREEN "\nActivating and updating base..."
-		conda update --all -y
-		conda clean --all -y
+    if command_exists conda; then
+        echo_color $BLUE "Updating all Conda environments..."
 
-		for env in $(conda env list | awk '{print $1}' | grep -vE '^\#|base'); do
-			echo_color $GREEN "\nActivating and updating $env..."
-			conda activate $env
-			conda update --all -y
-			conda clean --all -y
-			conda deactivate
-		done
+        for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
+            echo_color $GREEN "\nActivating and updating $env..."
+            conda activate $env
+            conda update --all -y
+            conda clean --all -y
+            conda deactivate
+        done
 
-		echo_color $GREEN "\nAll Conda environments have been updated."
-		echo_color $ORANGE "====================================================================================\n"
-	else
-		echo_color $RED "miniforge not found. Skipping..."
-	fi
+        conda activate base
+
+        echo_color $GREEN "\nAll Conda environments have been updated."
+        echo_color $ORANGE "====================================================================================\n"
+    else
+        echo_color $RED "miniforge not found. Skipping..."
+    fi
 }
 
 # Backup Conda environments
 backup_conda_environments() {
-	if command_exists conda; then
-		BACKUP_DIR="${HOME}/CondaBackup-RPI"
+    if command_exists conda; then
+        BACKUP_DIR="${HOME}/CondaBackup-RPI"
 
-		# Check if the backup directory exists
-		if [ ! -d "$BACKUP_DIR" ]; then
-			echo_color $BLUE "CondaBackup directory not found. Cloning from GitHub..."
-			git clone https://github.com/av1155/CondaBackup-RPI.git "$BACKUP_DIR" || {
-				echo_color $RED "Failed to clone CondaBackup-RPI repository."
-				exit 1
-			}
-		fi
+        # Check if the backup directory exists
+        if [ ! -d "$BACKUP_DIR" ]; then
+            echo_color $BLUE "CondaBackup directory not found. Cloning from GitHub..."
+            git clone https://github.com/av1155/CondaBackup-RPI.git "$BACKUP_DIR" || {
+                echo_color $RED "Failed to clone CondaBackup-RPI repository."
+                exit 1
+            }
+        fi
 
-		echo_color $BLUE "Backing up all Conda environments to $BACKUP_DIR..."
+        echo_color $BLUE "Backing up all Conda environments to $BACKUP_DIR..."
 
-		for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
-			echo_color $GREEN "\nBacking up environment $env..."
-			conda env export --name "$env" >"$BACKUP_DIR/${env}.yml"
-		done
+        for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
+            echo_color $GREEN "\nBacking up environment $env..."
+            conda env export --name "$env" >"$BACKUP_DIR/${env}.yml"
+        done
 
-		echo_color $GREEN "\nAll Conda environments have been backed up to $BACKUP_DIR."
-		echo_color $ORANGE "====================================================================================\n"
-	else
-		echo_color $RED "miniforge not found. Skipping..."
-	fi
+        echo_color $GREEN "\nAll Conda environments have been backed up to $BACKUP_DIR."
+
+        # Push changes to GitHub
+        echo_color $BLUE "Pushing changes to GitHub..."
+        cd "$BACKUP_DIR" || {
+            echo_color $RED "Failed to change to the backup directory."
+            exit 1
+        }
+
+        git add .
+        git commit -m "Backup Conda environments on $(date +'%Y-%m-%d %H:%M:%S')"
+        if [ $? -eq 0 ]; then
+            git push || {
+                echo_color $RED "Failed to push changes to GitHub."
+                exit 1
+            }
+        else
+            echo_color $GREEN "No changes to commit."
+        fi
+        cd -
+
+        echo_color $ORANGE "====================================================================================\n"
+    else
+        echo_color $RED "miniforge not found. Skipping..."
+    fi
 }
 
 # Function to install Node.js LTS and perform cleanup
@@ -191,4 +210,3 @@ main() {
 
 # Execute the main function
 main
-
