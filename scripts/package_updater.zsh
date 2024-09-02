@@ -136,9 +136,25 @@ backup_conda_environments() {
 	else
 		echo_color $GREEN "No changes to commit."
 	fi
-    cd - >/dev/null
+	cd - >/dev/null
 
 	echo_color $ORANGE "====================================================================================\n"
+}
+
+# Function to update tmux TPM plugins
+update_tmux_plugins() {
+	if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+		echo_color $BLUE "Updating tmux TPM plugins..."
+		"$HOME/.tmux/plugins/tpm/scripts/update_plugin.sh" all
+		if [ $? -eq 0 ]; then
+			echo_color $GREEN "\nAll tmux TPM plugins have been updated."
+		else
+			echo_color $RED "\nFailed to update tmux TPM plugins."
+		fi
+		echo_color $ORANGE "====================================================================================\n"
+	else
+		echo_color $RED "tmux TPM not found. Skipping..."
+	fi
 }
 
 # Update Oh My Zsh
@@ -401,6 +417,7 @@ main() {
 	update_homebrew
 	update_conda_environments
 	backup_conda_environments
+	update_tmux_plugins
 	update_omz
 	# update_mas
 	update_node

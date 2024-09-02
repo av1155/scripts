@@ -164,6 +164,22 @@ backup_conda_environments() {
     fi
 }
 
+# Function to update tmux TPM plugins
+update_tmux_plugins() {
+    if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+        echo_color $BLUE "Updating tmux TPM plugins..."
+        "$HOME/.tmux/plugins/tpm/scripts/update_plugin.sh" all
+        if [ $? -eq 0 ]; then
+            echo_color $GREEN "\nAll tmux TPM plugins have been updated."
+        else
+            echo_color $RED "\nFailed to update tmux TPM plugins."
+        fi
+        echo_color $ORANGE "====================================================================================\n"
+    else
+        echo_color $RED "tmux TPM not found. Skipping..."
+    fi
+}
+
 # Function to install Node.js LTS and perform cleanup
 install_node_lts() {
     if command_exists curl; then
@@ -212,11 +228,13 @@ install_code_server() {
 main() {
     echo_color $PURPLE "Starting Raspberry Pi 5 Package Updater..."
     update_apt
+    update_snap
     update_gems
     update_cargo
     update_omz
     update_conda_environments
     backup_conda_environments
+    update_tmux_plugins
     install_node_lts
     verify_node_install
     install_code_server
