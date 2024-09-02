@@ -36,6 +36,20 @@ update_apt() {
     echo_color $ORANGE "====================================================================================\n"
 }
 
+# Function to update snap packages and perform cleanup
+update_snap() {
+    if command_exists snap; then
+        echo_color $BLUE "Updating snap packages..."
+        sudo snap refresh
+        echo_color $GREEN "Cleaning up snap..."
+        sudo snap set system refresh.retain=2
+        echo_color $GREEN "\nAll snap packages have been updated and cleaned up."
+        echo_color $ORANGE "====================================================================================\n"
+    else
+        echo_color $RED "Snap not found. Skipping..."
+    fi
+}
+
 # Function to update Ruby gems and perform cleanup
 update_gems() {
     if command_exists gem; then
