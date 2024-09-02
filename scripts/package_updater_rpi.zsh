@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Initialize Conda for script usage
+[ -s "/home/andreaventi/miniforge3/etc/profile.d/conda.sh" ] && source "/home/andreaventi/miniforge3/etc/profile.d/conda.sh"
+
 # VARIABLES & HELPER FUNCTIONS ====================================================
 
 # ANSI color codes
@@ -139,7 +142,7 @@ backup_conda_environments() {
         else
             echo_color $GREEN "No changes to commit."
         fi
-        cd -
+        cd - >/dev/null
 
         echo_color $ORANGE "====================================================================================\n"
     else

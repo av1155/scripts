@@ -136,7 +136,7 @@ backup_conda_environments() {
 	else
 		echo_color $GREEN "No changes to commit."
 	fi
-	cd -
+    cd - >/dev/null
 
 	echo_color $ORANGE "====================================================================================\n"
 }
