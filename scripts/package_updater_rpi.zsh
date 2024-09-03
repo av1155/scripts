@@ -1,7 +1,20 @@
-#!/bin/bash
+#!/bin/zsh
 
 # Initialize Conda for script usage
-[ -s "/home/andreaventi/miniforge3/etc/profile.d/conda.sh" ] && source "/home/andreaventi/miniforge3/etc/profile.d/conda.sh"
+if [ -f "/home/andreaventi/miniforge3/etc/profile.d/conda.sh" ]; then
+    source "/home/andreaventi/miniforge3/etc/profile.d/conda.sh"
+else
+    echo "Conda initialization script not found. Exiting..."
+    exit 1
+fi
+
+if [ -d "$HOME/.oh-my-zsh" ]; then
+    export ZSH="$HOME/.oh-my-zsh"
+    source "$ZSH/oh-my-zsh.sh"
+else
+    echo "Oh My Zsh initialization failed. Exiting..."
+    exit 1
+fi
 
 # VARIABLES & HELPER FUNCTIONS ====================================================
 
@@ -84,10 +97,8 @@ update_cargo() {
 
 # Update Oh My Zsh
 update_omz() {
-    if [ -d "$HOME/.oh-my-zsh" ]; then
-        "$ZSH/tools/upgrade.sh"
-        "$ZSH/tools/changelog.sh"
-        echo_color $GREEN "\nOh My Zsh has been updated."
+    if command_exists omz; then
+        omz update
         echo_color $ORANGE "====================================================================================\n"
     else
         echo_color $RED "Oh My Zsh not found. Skipping..."
