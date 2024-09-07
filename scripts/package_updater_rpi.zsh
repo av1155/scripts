@@ -174,7 +174,7 @@ backup_conda_environments() {
         echo_color $RED "miniforge not found. Skipping..."
     fi
 }
-/home/andreaventi/.dotfiles/.config/tmux/plugins/tpm/scripts
+
 # Function to update tmux TPM plugins
 update_tmux_plugins() {
     if [ -d "$HOME/.dotfiles/.config/tmux/plugins/tpm" ]; then
