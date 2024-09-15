@@ -50,10 +50,23 @@ update_homebrew() {
 		brew upgrade
 		brew cleanup
 		brew autoremove
-		cd "/Users/andreaventi/.dotfiles"
+		cd "$HOME/.dotfiles/configs/MacOS-Bootstrap"
 		rm Brewfile
 		brew bundle dump --describe --no-lock
-		cd -
+
+		# Push changes to GitHub
+		echo_color $BLUE "Pushing changes to GitHub..."
+		git add .
+		git commit -m "Updated Brewfile on $(date +'%Y-%m-%d %H:%M:%S')"
+		if [ $? -eq 0 ]; then
+			git push || {
+				echo_color $RED "Failed to push changes to GitHub."
+				exit 1
+			}
+		else
+			echo_color $GREEN "No changes to commit."
+		fi
+		cd - >/dev/null
 
 		echo_color $ORANGE "====================================================================================\n"
 	else
