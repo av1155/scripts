@@ -1,131 +1,219 @@
-# My Bash Scripts Repository
+# Scripts Collection
 
-## Introduction
+A versatile collection of scripts designed for developers and system administrators to enhance productivity and streamline workflows. This repository includes utilities for managing Java projects, initializing Maven projects, compiling C programs, updating packages, and more.
 
-This repository contains a collection of Bash scripts that I've created for
-various tasks. These scripts are designed to automate tasks, enhance
-productivity, and make life easier.
+---
 
-## Homebrew Formula
+<!--toc:start-->
 
-To install `JavaProjectManager.zsh` using Homebrew:
-
-1.  Tap the repository:
-
-    ```bash
-    brew tap av1155/scripts https://github.com/av1155/scripts
-    ```
-
-2.  Install the script:
-
-    ```bash
-    brew install javaprojectmanager
-    ```
-
-To uninstall:
-
-1.  Remove the script:
-
-    ```bash
-    brew uninstall javaprojectmanager
-    ```
-
-2.  Untap the repository (if not needed anymore):
-
-    ```bash
-    brew untap av1155/scripts
-    ```
+-   [Scripts Collection](#scripts-collection)
+    -   [Table of Contents](#table-of-contents)
+    -   [Scripts](#scripts)
+        -   [JavaProjectManager](#javaprojectmanager)
+        -   [MavenJavaProjectInitializer](#mavenjavaprojectinitializer)
+        -   [C Compiler](#c-compiler)
+        -   [Get Code Context](#get-code-context)
+        -   [HTML to Text Converter](#html-to-text-converter)
+        -   [Image Previewer (imgp)](#image-previewer-imgp)
+        -   [Neovim Surround Usage Guide](#neovim-surround-usage-guide)
+        -   [Package Updater](#package-updater)
+        -   [Package Updater for Raspberry Pi](#package-updater-for-raspberry-pi)
+        -   [SQL URL Generator](#sql-url-generator)
+        -   [Tmux Shortpath](#tmux-shortpath)
+    -   [Installation](#installation)
+        -   [For the JavaProjectManager, a Homebrew formula is available:](#for-the-javaprojectmanager-a-homebrew-formula-is-available)
+    -   [Usage](#usage)
+    -   [Contributing](#contributing)
+    -   [License](#license)
+    <!--toc:end-->
 
 ## Scripts
 
-Here's a brief overview of the scripts included in this repository:
+### JavaProjectManager
 
-### [JavaProjectManager.zsh](scripts/JavaProjectManager/JavaProjectManager.zsh)
+**File:** `scripts/JavaProjectManager/JavaProjectManager.zsh`
 
-This dynamic ZSH script is engineered to streamline the compilation and execution of Java files. It's adept at accommodating various project structures like IntelliJ IDEA and generic Java files, seamlessly blending into these setups. Notable features encompass:
+A versatile command-line utility for Java developers to compile and run Java files. It supports various Java project structures, including IntelliJ IDEA projects, Maven projects, and generic Java files. The script provides an interactive menu for project selection, argument handling, and JVM options. It also manages temporary `.class` files to ensure a clean working environment.
 
--   Comprehensive error handling and debugging with syntax-highlighted compilation errors for efficient issue identification and resolution during compilation and execution phases.
--   Interactive file selection facilitated by `fzf`, augmented with a file preview functionality via `bat`.
--   Proficiency in managing project-specific structures and tidying up `.class` files after execution.
--   Memorization of the last executed file's path to simplify subsequent recompilation and reruns.
--   Support for inputting arguments for Java programs, enhancing flexibility.
--   Enhanced output with color-coding for improved clarity and user interaction.
+**Features:**
 
-### [package_updater.zsh](scripts/package_updater.zsh)
+-   Compile and run Java files from different project structures.
+-   Interactive menu with fuzzy finder (`fzf`) for file selection.
+-   JVM options and argument handling.
+-   Clean up temporary `.class` files after execution.
+-   Error handling with syntax-highlighted output using `bat`.
 
-A robust script for updating Homebrew, Conda environments, Oh My Zsh, Mac App Store applications, Node.js, npm packages, and AstroNvim plugins. Designed for automation and ease of use, especially in non-interactive environments like cron jobs. Features include:
+### MavenJavaProjectInitializer
 
--   Initialization and management of key software environments and paths.
--   Comprehensive update mechanisms for a variety of software tools and utilities.
--   Detailed status output with color-coded text for clear and immediate feedback.
--   Optional logging and reporting features to keep track of script activities and outcomes.
--   Conditional logic to handle various installation states and user interaction scenarios.
+**File:** `scripts/MavenJavaProjectInitializer.zsh`
 
-### [MavenJavaProjectInitializer.zsh](scripts/MavenJavaProjectInitializer.zsh)
+A script to initialize a new Java Maven project with standard directory structures and optional sample Java files. It prompts for project details, creates the `pom.xml` file with appropriate settings, and optionally generates test files.
 
-This script is a powerful tool for automating the creation of Java projects with Maven. It offers a range of features to streamline project setup and ensure proper structure. Key functionalities include:
+**Features:**
 
--   Validation of project and class names, ensuring adherence to naming conventions and avoidance of Java reserved words.
--   Automatic creation of standard Maven project directories and essential files like `pom.xml` and `README.md`.
--   Customizable Java class file generation with template options such as Basic, With Constructor, Singleton, and With Getters/Setters.
--   Option to create JUnit test files with a basic test template.
--   Integration of Maven for project building, including checks for Java and Maven installations.
--   Creation of a `.gitignore` file tailored for Java and Maven projects.
--   Handling of error scenarios with a cleanup mechanism to remove partially created project files and directories.
+-   Create standard Maven project directories.
+-   Generate `pom.xml` with customizable properties.
+-   Option to create sample Java classes with various templates.
+-   Build the project using Maven and create a README and `.gitignore`.
 
-### [imgp.sh](scripts/imgp.sh)
+### C Compiler
 
-This script is a flexible tool for viewing images directly in various terminal environments. It is designed to work with iTerm2, Kitty, tmux, and other terminals via the viu image viewer. Key features include:
+**File:** `scripts/c_compiler.zsh`
 
--   Ability to search and select image files within a specified directory depth, using the powerful fzf tool for file selection.
--   Support for a wide range of image formats, including jpg, jpeg, png, gif, webp, tiff, bmp, heif, avif, and many more.
--   Customizable depth setting for file search, allowing users to define how deep the script searches for image files.
--   Integration with terminal-specific image viewers like iTerm2's imgcat, Kitty's icat, and viu, ensuring optimal display in different environments.
--   Option to specify a filename directly for quick image viewing.
--   Automated terminal detection to utilize the best available method for displaying images based on the user's current terminal setup.
+A script to compile C programs in the current directory. It lists available `.c` files, prompts the user for the file to compile, and offers options to include debug information. It integrates with LLDB for debugging and provides basic LLDB commands.
 
-### [sqlurl.sh](scripts/sqlurl.sh)
+**Features:**
 
-This script is an essential utility for database management, providing a streamlined approach to connect to various database systems. It is specifically tailored for users who frequently interact with databases in their development workflow. Key functionalities include:
+-   List and select `.c` files for compilation.
+-   Option to compile with debug symbols.
+-   Integration with LLDB for debugging.
+-   Color-coded output for better readability.
 
--   Interactive selection of `.db` files in the current directory using the fzf tool.
--   Support for multiple database management tools including SQLite, MySQL, PostgreSQL, MSSQL, Oracle, and MongoDB.
--   User-friendly prompts for entering database connection details like username, password, hostname, port, and database name.
--   Automatic construction of database connection URLs based on user input, catering to different database systems.
--   Color-coded output for better readability and user experience.
--   Validation of user input to ensure the correct selection of database tools and connection parameters.
+### Get Code Context
 
-### nvim_surround_usage.sh[JavaProjectManager.zsh](scripts/JavaProjectManager/JavaProjectManager.zsh)
+**File:** `scripts/get_code_context.sh`
 
-This script serves as a quick reference guide for the Vim Surround plugin in Neovim. It outlines the core operations of adding, deleting, and changing text surroundings, which are essential for efficient code editing. Key highlights include:
+A script to extract code context from specified directories and file types. It recursively reads files and appends their content to an output file. Useful for generating code summaries or documentation.
 
--   Keymaps for adding (`ys`), deleting (`ds`), and changing (`cs`) text surroundings.
--   Practical examples demonstrating how to apply these keymaps in various editing scenarios.
--   Coverage of common use cases like surrounding words, making strings, deleting tags, and changing quotes.
--   Instructions for working with different types of text elements, including parentheses, brackets, quotes, and HTML tags.
--   A simple, easy-to-read format that allows users to quickly reference and apply these keymaps in their editing workflow.
+**Features:**
+
+-   Specify directories and file extensions to include.
+-   Ignore certain file types (e.g., images).
+-   Interactive mode if no directories or extensions are provided.
+-   Output combined code context to a single file.
+
+### HTML to Text Converter
+
+**File:** `scripts/html-to-text.zsh`
+
+A script to fetch website content and convert it to plain text using `lynx`. It prompts for a URL and an output filename, then saves the readable content.
+
+**Features:**
+
+-   Convert web pages to plain text.
+-   Simple user prompts for URL and output file.
+-   Error handling and validation.
+
+### Image Previewer (imgp)
+
+**File:** `scripts/imgp.sh`
+
+A script to preview images in the terminal. It supports various image formats and uses tools like `fzf`, `bat`, `viu`, and terminal-specific methods for displaying images.
+
+**Features:**
+
+-   Search and select images using `fzf`.
+-   Preview images directly in the terminal.
+-   Supports iTerm2, Kitty, tmux, and generic terminals.
+-   Handles a wide range of image formats.
+
+### Neovim Surround Usage Guide
+
+**File:** `scripts/nvim_surround_usage.sh`
+
+A script that outputs a comprehensive usage guide for the `nvim-surround` plugin, including basic commands, examples, and default surround pairs.
+
+**Features:**
+
+-   Detailed explanations of `nvim-surround` commands.
+-   Color-coded output for better readability.
+-   Usage examples and quick reference.
+
+### Package Updater
+
+**File:** `scripts/package_updater.zsh`
+
+A script to update various packages and applications on macOS. It handles Homebrew, Conda environments, Oh My Zsh, Node.js, npm packages, and more. It also manages log files and can send email reports.
+
+**Features:**
+
+-   Update Homebrew packages and manage `Brewfile`.
+-   Update Conda environments and backup to GitHub.
+-   Update tmux plugins and Oh My Zsh.
+-   Update Node.js using NVM and npm global packages.
+-   Manage log files and send email reports.
+
+### Package Updater for Raspberry Pi
+
+**File:** `scripts/package_updater_rpi.zsh`
+
+Similar to the `package_updater.zsh` script but tailored for Raspberry Pi. It updates apt packages, snap packages, Ruby gems, Cargo packages, and more.
+
+**Features:**
+
+-   Update and clean up apt packages.
+-   Update snap packages and Ruby gems.
+-   Update Cargo packages and clean registry.
+-   Install Node.js LTS and `code-server`.
+
+### SQL URL Generator
+
+**File:** `scripts/sqlurl.sh`
+
+A script to generate a database connection URL by prompting the user for connection details or selecting a `.db` file using `fzf`.
+
+**Features:**
+
+-   Interactive prompts for database credentials.
+-   Supports multiple database types (SQLite, MySQL, PostgreSQL, etc.).
+-   Generates a connection URL for use in applications.
+
+### Tmux Shortpath
+
+**File:** `scripts/tmux_shortpath.sh`
+
+A script to shorten long file paths for display in tmux status bars or prompts.
+
+**Features:**
+
+-   Shortens paths by replacing intermediate directories with an ellipsis.
+-   Useful for keeping status bars clean and readable.
+
+---
 
 ## Installation
 
-To use these scripts, clone the repository to your local machine:
+To use these scripts, you can clone the repository and add the scripts to your `PATH`, or install individual scripts as needed.
 
 ```bash
 git clone https://github.com/av1155/scripts.git
-```
-
-Then navigate to the scripts directory:
-
-```bash
 cd scripts
 ```
 
-You can run any script by typing `./scriptname.sh`.
+### For the JavaProjectManager, a Homebrew formula is available:
 
-### Contributing
+File: [formula/javaprojectmanager.rb](./formula/javaprojectmanager.rb)
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+You can install it using:
 
-### License
+```bash
+brew tap av1155/scripts https://github.com/av1155/scripts.git
+brew install javaprojectmanager
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for
-details.
+To uninstall:
+
+```bash
+brew uninstall javaprojectmanager
+brew untap av1155/scripts
+```
+
+## Usage
+
+Most scripts include usage instructions within the code or via help options. For example:
+
+JavaProjectManager:
+
+```bash
+jcr --help
+```
+
+Ensure you have the necessary dependencies installed as specified in each script.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+
+## License
+
+This project is licensed under the MIT License.
