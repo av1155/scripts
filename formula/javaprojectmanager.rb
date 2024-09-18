@@ -2,8 +2,8 @@ class Javaprojectmanager < Formula
   desc "Easily compile and run Java files, manage cleanup, and view syntax-highlighted errors through a user-friendly fuzzy-finding menu."
   homepage "https://github.com/av1155/scripts"
   url "https://raw.githubusercontent.com/av1155/scripts/main/scripts/JavaProjectManager/JavaProjectManager.zsh"
-  version "2.1.0"
-  sha256 "5414d8cb4247c1826388aa715fcce2b939ea292f59fb98988b33e9bc7d2e43d3"
+  version "2.2.0"
+  sha256 "4336553faad8adb8c4727ffaaaa0bb1649c5931261f7ba1954340190d56e53fc"
   license "MIT"
 
   depends_on "fzf"
