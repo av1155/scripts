@@ -11,11 +11,17 @@ NC='\033[0m' # No Color
 # Function to prompt user for database connection details
 get_db_details() {
 	read -r -p "Enter username: " username
-	read -r -p "Enter password: " -s password
+	read -r -sp "Enter password (will be hidden): " password
 	echo
 	read -r -p "Enter hostname: " hostname
 	read -r -p "Enter port (Press Enter for default): " port
 	read -r -p "Enter database name/service name: " dbname
+
+	# Validate required fields
+	if [[ -z "$username" || -z "$hostname" || -z "$dbname" ]]; then
+		echo -e "${RED}Username, hostname, and database name are required fields.${NC}"
+		exit 1
+	fi
 }
 
 # Use fzf to select a .db file in the current working directory
@@ -49,8 +55,23 @@ if [ -n "$selected_file" ]; then
 			exit 1
 		fi
 	else
-		# User entered a tool name directly
-		db_tool="$db_choice"
+		# User entered a tool name directly (case-insensitive matching)
+		db_tool=$(echo "$db_choice" | tr '[:upper:]' '[:lower:]')
+
+		# Use a loop to check if the user input matches one of the supported tools
+		found_tool=false
+		for tool in "${supported_tools[@]}"; do
+			if [[ $tool == "$db_tool" ]]; then
+				found_tool=true
+				break
+			fi
+		done
+
+		# If the tool is not supported, exit with an error message
+		if [[ "$found_tool" == false ]]; then
+			echo -e "${RED}Unsupported database management tool.${NC}"
+			exit 1
+		fi
 	fi
 
 	# Check which tool was chosen and construct the URL accordingly
