@@ -3,7 +3,7 @@ class Javaprojectmanager < Formula
   homepage "https://github.com/av1155/scripts"
   url "https://raw.githubusercontent.com/av1155/scripts/main/scripts/JavaProjectManager/JavaProjectManager.zsh"
   version "2.2.0"
-  sha256 "4336553faad8adb8c4727ffaaaa0bb1649c5931261f7ba1954340190d56e53fc"
+  sha256 "2e44989df1bab92dde6baebb2b6acb1a29f34b4a6917a0070673b85842f32fd8"
   license "MIT"
 
   depends_on "fzf"

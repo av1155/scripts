@@ -1,4 +1,22 @@
-# README for JavaProjectManager Script
+# JavaProjectManager Script
+
+<!--toc:start-->
+
+-   [JavaProjectManager Script](#javaprojectmanager-script)
+    -   [Overview](#overview)
+    -   [Homebrew Formula](#homebrew-formula)
+    -   [Features](#features)
+    -   [Dependencies](#dependencies)
+    -   [Installation](#installation)
+    -   [Usage](#usage)
+        -   [Options](#options)
+        -   [Interactive Menu](#interactive-menu)
+        -   [JVM Options](#jvm-options)
+        -   [Argument Handling](#argument-handling)
+    -   [Cleanup](#cleanup)
+    -   [Contributing](#contributing)
+    -   [License](#license)
+    <!--toc:end-->
 
 ## Overview
 
@@ -39,6 +57,7 @@ To uninstall:
 -   **Interactive Menu**: Easily select the project structure or specific actions to perform, enhancing user interaction.
 -   **Multiple Project Support**: Supports IntelliJ IDEA, Maven, and generic Java projects.
 -   **Argument Handling**: Facilitates passing arguments to the Java program being executed, directly from the command line.
+-   **Custom JVM Options**: You can now specify custom JVM options (e.g., -Xmx1g) before running your Java program.
 -   **Clean Environment**: Manages and cleans up temporary `.class` files to maintain a clutter-free workspace.
 -   **Error Handling**: Robust error handling mechanisms are in place, providing clear and understandable compilation and execution error messages.
 -   **Maven Integration**: Allows for the execution of Maven commands, including `mvn test`, directly within the script.
@@ -72,6 +91,10 @@ jcr [OPTIONS]
 2.  **Maven Project**: Choose this to compile and run files from a Maven project. This includes support for running Maven tests (`mvn test`).
 3.  **Generic Java Project**: Choose this for generic Java projects not tied to any specific IDE or structure.
 4.  **Re-run Last Executed File**: Quickly re-execute the last file without navigating through the menu.
+
+### JVM Options
+
+When compiling and running a Java file, the script will now prompt you to enter any JVM options (e.g., -Xmx1g to allocate 1GB of memory). You can either enter the desired options or press Enter to skip this step and proceed with default JVM settings.
 
 ### Argument Handling
 
