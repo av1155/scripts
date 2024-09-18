@@ -20,7 +20,7 @@
 
 ## Overview
 
-JavaProjectManager is a versatile command-line utility designed to help Java developers compile and execute Java files effortlessly. Tailored to work with various Java project structures, including IntelliJ IDEA projects, Maven projects, and Generic Java projects, this script offers an interactive menu for a seamless development experience outside of an IDE environment.
+JavaProjectManager is a versatile command-line utility designed to help Java developers compile and execute Java files effortlessly. It supports various Java project structures, including IntelliJ IDEA projects, Maven projects, and generic Java projects. With an interactive menu, it offers a seamless development experience outside of an IDE.
 
 ## Homebrew Formula
 
@@ -54,25 +54,31 @@ To uninstall:
 
 ## Features
 
--   **Interactive Menu**: Easily select the project structure or specific actions to perform, enhancing user interaction.
+-   **Interactive Menu**: Easily select project structure or actions, enhancing user interaction.
 -   **Multiple Project Support**: Supports IntelliJ IDEA, Maven, and generic Java projects.
--   **Argument Handling**: Facilitates passing arguments to the Java program being executed, directly from the command line.
--   **Custom JVM Options**: You can now specify custom JVM options (e.g., -Xmx1g) before running your Java program.
--   **Clean Environment**: Manages and cleans up temporary `.class` files to maintain a clutter-free workspace.
--   **Error Handling**: Robust error handling mechanisms are in place, providing clear and understandable compilation and execution error messages.
--   **Maven Integration**: Allows for the execution of Maven commands, including `mvn test`, directly within the script.
+-   **Argument Handling**: Pass arguments to the Java program directly from the command line.
+-   **Custom JVM Options**: Specify custom JVM options (e.g., `-Xmx1g`) before running your Java program.
+-   **Clean Environment**: Manages and removes temporary `.class` files, keeping the workspace clean.
+-   **Error Handling**: Provides clear and understandable error messages for compilation and execution failures.
+-   **Maven Integration**: Execute Maven commands such as `mvn test` within the script.
 
 ## Dependencies
+
+Ensure the following dependencies are installed:
 
 -   `fzf`: For interactive file selection.
 -   `bat`: For enhanced file content display.
 -   `javac`: Java compiler for compiling Java files.
 -   `java`: Java runtime for executing compiled Java programs.
--   `mvn`: Maven command-line tool (for Maven project support).
+-   `mvn`: Maven command-line tool (for Maven projects).
 
 ## Installation
 
-Ensure the required dependencies (fzf, bat, javac, java, and mvn for Maven projects) are installed on your system. You can typically install these through your package manager on Linux or Homebrew on macOS.
+You can install the required dependencies via your package manager (Linux) or Homebrew (macOS). Example:
+
+```bash
+brew install fzf bat java maven
+```
 
 ## Usage
 
@@ -87,14 +93,20 @@ jcr [OPTIONS]
 
 ### Interactive Menu
 
-1.  **IntelliJ IDEA Project**: Select this option to compile and run files from an IntelliJ IDEA project.
-2.  **Maven Project**: Choose this to compile and run files from a Maven project. This includes support for running Maven tests (`mvn test`).
-3.  **Generic Java Project**: Choose this for generic Java projects not tied to any specific IDE or structure.
-4.  **Re-run Last Executed File**: Quickly re-execute the last file without navigating through the menu.
+1. IntelliJ IDEA Project: Compile and run files from an IntelliJ IDEA project.
+2. Maven Project: Compile and run files from a Maven project, or run mvn test.
+3. Generic Java Project: Compile and run files from a generic Java project.
+4. Re-run Last Executed File: Quickly re-execute the last file without navigating the menu.
 
 ### JVM Options
 
-When compiling and running a Java file, the script will now prompt you to enter any JVM options (e.g., -Xmx1g to allocate 1GB of memory). You can either enter the desired options or press Enter to skip this step and proceed with default JVM settings.
+When compiling and running a Java file, the script will now prompt you to enter any JVM options (e.g., `-Xmx1g` to allocate 1GB of memory). These options allow you to control the behavior of the JVM, including memory allocation, garbage collection, and more. Some common JVM options include:
+
+-   `-Xmx<size>`: Sets the maximum heap size (e.g., `-Xmx2g` for 2GB).
+-   `-Xms<size>`: Sets the initial heap size (e.g., `-Xms512m` for 512MB).
+-   `-XX:+UseG1GC`: Enables the G1 garbage collector.
+
+You can enter the desired options or press Enter to skip this step.
 
 ### Argument Handling
 

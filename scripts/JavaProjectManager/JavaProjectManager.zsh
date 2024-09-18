@@ -36,6 +36,8 @@ ${NC}- ${ORANGE}Generic Java File:${NC} Run the script from a directory containi
   you wish to compile and run.
 ${NC}- ${ORANGE}Argument Handling:${NC} The script allows you to provide arguments for the Java file you want to run.
   Enter the arguments separated by spaces when prompted.
+${NC}- ${ORANGE}JVM Options:${NC} You can provide custom JVM flags (e.g., -Xmx1g, -Xms512m) when prompted before running the Java file. 
+  These options allow you to control the memory allocation, garbage collection, and other runtime behavior of the JVM.
 
 ${BLUE}A versatile command-line utility for Java developers to compile and run Java files.
 ${NC}OPTIONS:
