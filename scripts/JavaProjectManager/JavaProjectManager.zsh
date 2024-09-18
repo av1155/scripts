@@ -158,6 +158,10 @@ compile_and_run() {
 		rm compile_errors.txt
 	fi
 
+	# Ask for JVM options
+	echo -e "${BLUE}Enter JVM options (e.g., -Xmx10g) or press Enter to skip:${NC}"
+	read jvm_options
+
 	# Execution logic
 	class_name=$(basename "$java_file_path" .java)
 	echo -e "${GREEN}Compiled class:${NC} $class_name.class"
@@ -174,10 +178,16 @@ compile_and_run() {
 
 	java_file_path_without_extension=${java_file_path%.java}
 
-	if [ ${#args[@]} -eq 0 ]; then
-		run_command=("java" "${java_file_path_without_extension//\//.}")
+	# Build the run command with JVM options if provided
+	if [ -n "$jvm_options" ]; then
+		run_command=("java" $jvm_options "${java_file_path_without_extension//\//.}")
 	else
-		run_command=("java" "${java_file_path_without_extension//\//.}" "${args[@]}")
+		run_command=("java" "${java_file_path_without_extension//\//.}")
+	fi
+
+	# Append any program arguments to the run command
+	if [ ${#args[@]} -ne 0 ]; then
+		run_command+=("${args[@]}")
 	fi
 
 	echo -e "${BLUE}Running Java file:${NC} ${run_command[*]}"
