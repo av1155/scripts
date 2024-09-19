@@ -14,13 +14,14 @@ show_help() {
   echo ""
   echo -e "${bold}Options:${reset}"
   echo -e "  ${yellow}-d${reset}   Directories to include (space-separated, default: ${blue}src lib components pages app${reset})"
-  echo -e "  ${yellow}-e${reset}   File extensions to include (space-separated, default: ${blue}js ts py go java rb php${reset})"
+  echo -e "  ${yellow}-e${reset}   File extensions to include (space-separated, use '*' to include all, default: ${blue}js ts py go java rb php${reset})"
   echo -e "  ${yellow}-i${reset}   File types to ignore (space-separated, default: ${blue}ico png jpg jpeg gif svg${reset})"
   echo -e "  ${yellow}-h${reset}   Show help message"
   echo ""
   echo -e "${bold}Examples:${reset}"
   echo -e "  $0 -d \"${blue}src test${reset}\" -e \"${blue}py html${reset}\" -i \"${blue}png jpg${reset}\""
   echo -e "  $0 -d \"${blue}application migrations static templates${reset}\" -e \"${blue}py html yaml yml${reset}\" -i \"${blue}png jpg gif${reset}\""
+  echo -e "  $0 -d \"${blue}src${reset}\" -e \"${blue}*${reset}\" -i \"${blue}png jpg gif${reset}\""
 }
 
 # Default values
@@ -60,7 +61,7 @@ if [ "$interactive" = true ]; then
   read -r -a directories <<<"${input_directories:-${default_directories[@]}}"
 
   # Prompt for extensions
-  read -rp "$(echo -e "${yellow}Enter file extensions to include (space-separated, default: js ts py go java rb php): ${reset}") " input_extensions
+  read -rp "$(echo -e "${yellow}Enter file extensions to include (space-separated, use '*' to include all, default: js ts py go java rb php): ${reset}") " input_extensions
   read -r -a extensions <<<"${input_extensions:-${default_extensions[@]}}"
 
   # Prompt for ignore patterns
@@ -102,6 +103,12 @@ should_ignore_file() {
 # Function to check if a file should be included
 should_include_file() {
   local file_ext="${1##*.}"
+
+  # Include all files if '*' is specified
+  if [[ " ${extensions[*]} " == *" * "* ]]; then
+    return 0 # true (include all files)
+  fi
+
   for ext in "${extensions[@]}"; do
     if [[ "$file_ext" == "$ext" ]]; then
       return 0 # true (should include)
