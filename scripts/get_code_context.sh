@@ -14,7 +14,7 @@ show_help() {
   echo ""
   echo -e "${bold}Options:${reset}"
   echo -e "  ${yellow}-d${reset}   Directories to include (space-separated, default: ${blue}src lib components pages app${reset})"
-  echo -e "  ${yellow}-e${reset}   File extensions to include (space-separated, use '*' to include all, default: ${blue}js ts py go java rb php${reset})"
+  echo -e "  ${yellow}-e${reset}   File extensions to include (space-separated, use '*' to include all, default: ${blue}js ts py go java rb php sh zsh md txt${reset})"
   echo -e "  ${yellow}-i${reset}   File types to ignore (space-separated, default: ${blue}ico png jpg jpeg gif svg${reset})"
   echo -e "  ${yellow}-h${reset}   Show help message"
   echo ""
@@ -26,7 +26,7 @@ show_help() {
 
 # Default values
 default_directories=("src" "lib" "components" "pages" "app")
-default_extensions=("js" "ts" "py" "go" "java" "rb" "php")
+default_extensions=("js" "ts" "py" "go" "java" "rb" "php" "sh" "zsh" "md")
 default_ignore=("ico" "png" "jpg" "jpeg" "gif" "svg")
 
 # Parse options
@@ -61,7 +61,7 @@ if [ "$interactive" = true ]; then
   read -r -a directories <<<"${input_directories:-${default_directories[@]}}"
 
   # Prompt for extensions
-  read -rp "$(echo -e "${yellow}Enter file extensions to include (space-separated, use '*' to include all, default: js ts py go java rb php): ${reset}") " input_extensions
+  read -rp "$(echo -e "${yellow}Enter file extensions to include (space-separated, use '*' to include all, default: js ts py go java rb php sh zsh md txt): ${reset}") " input_extensions
   read -r -a extensions <<<"${input_extensions:-${default_extensions[@]}}"
 
   # Prompt for ignore patterns
@@ -88,6 +88,20 @@ output_file="${project_dir}/code_context.txt"
 if [ -f "$output_file" ]; then
   rm "$output_file"
 fi
+
+# Add tree listing at the beginning of the output file using eza
+echo -e "${green}Generating tree listing...${reset}"
+
+# Clear header to label the tree structure
+echo "====================" >"$output_file"
+echo "Project Structure:" >>"$output_file"
+echo "====================" >>"$output_file"
+eza -A --git --icons=auto --tree --level=2 --ignore-glob '.git|node_modules|*.log|*.tmp|dist|build|.DS_Store|__pycache__|*.swp|*.swo|.idea|coverage|env|venv|Icon?' >>"$output_file"
+
+# Add separation for clarity before listing the file contents
+echo -e "\n====================" >>"$output_file"
+echo "File Contents:" >>"$output_file"
+echo -e "====================\n" >>"$output_file"
 
 # Function to check if a file extension should be ignored
 should_ignore_file() {
