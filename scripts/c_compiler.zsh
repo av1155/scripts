@@ -17,12 +17,13 @@ show_lldb_tldr() {
     echo -e "${CYAN}====================================================================${NC}"
     echo -e "${YELLOW}TL;DR: Basic LLDB Debugging Commands${NC}"
     echo -e "${CYAN}====================================================================${NC}"
+    echo -e "${WHITE}(lldb) file ./compiledFile.out     ${NC}# Load the executable into LLDB"
     echo -e "${WHITE}(lldb) breakpoint set --name main  ${NC}# Set a breakpoint at the main function"
     echo -e "${WHITE}(lldb) run                         ${NC}# Run the program"
     echo -e "${WHITE}(lldb) next                        ${NC}# Step to the next line of code"
     echo -e "${WHITE}(lldb) print var                   ${NC}# Print the value of the variable 'var'"
     echo -e "${WHITE}(lldb) exit                        ${NC}# Exit"
-    echo -e "${CYAN}====================================================================${NC}"
+    echo -e "${CYAN}====================================================================\n${NC}"
 }
 
 # Check if fzf is installed
@@ -47,6 +48,13 @@ selected_files=($(printf '%s\n' "${c_files[@]}" | fzf --multi))
 # Ensure user selected at least one file
 if [ ${#selected_files[@]} -eq 0 ]; then
     echo -e "${RED}No files selected.${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}Checking for syntax errors...${NC}"
+gcc "${selected_files[@]}" -fsyntax-only
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Syntax errors detected. Compilation halted.${NC}"
     exit 1
 fi
 
