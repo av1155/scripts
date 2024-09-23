@@ -115,7 +115,7 @@ if [ "$interactive" = true ]; then
     fi
   fi
 
-  echo -e "${green}Equivalent command:${reset} $cmd"
+  echo -e "\n${green}Equivalent command:${reset} $cmd"
 
 fi
 
@@ -128,9 +128,6 @@ ignore_patterns=("${ignore_patterns[@]:-${default_ignore[@]}}")
 project_dir=$(pwd)
 output_file="${project_dir}/code_context.txt"
 [ -f "$output_file" ] && rm "$output_file"
-
-# Add tree listing at the beginning of the output file using eza
-echo -e "\n${green}Generating tree listing...${reset}"
 
 # Clear header to label the tree structure
 echo "====================" >"$output_file"
@@ -170,7 +167,7 @@ for dir in "${directories[@]}"; do
   fd_command_ext+=" $dir"
 
   # Debugging: Show constructed fd command for extensions
-  echo -e "${bold}${light_magenta}Constructed fd command (extensions):${reset} $fd_command_ext"
+  echo -e "\n${bold}${light_magenta}Constructed fd command (extensions):${reset} $fd_command_ext"
 
   # Execute the fd command for files with extensions
   eval "$fd_command_ext" | while read -r file; do
