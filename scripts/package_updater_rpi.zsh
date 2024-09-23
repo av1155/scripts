@@ -98,7 +98,7 @@ update_cargo() {
 # Update Oh My Zsh
 update_omz() {
     if command_exists omz; then
-        omz update
+        $HOME/.oh-my-zsh/tools/upgrade.sh
         echo_color $ORANGE "====================================================================================\n"
     else
         echo_color $RED "Oh My Zsh not found. Skipping..."
