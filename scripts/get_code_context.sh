@@ -19,7 +19,7 @@ show_help() {
   echo -e "  ${blue}those will replace the default arguments.${reset}"
   echo -e "  ${yellow}-d${reset}  Directories to include (default: . )"
   echo -e "  ${yellow}-e${reset}  File extensions to include (default: js ts html css py go java c cpp cs rb rs php sh zsh md txt)"
-  echo -e "  ${yellow}-i${reset}  File types to ignore (default: ico png jpg jpeg gif svg out)"
+  echo -e "  ${yellow}-i${reset}  File types to ignore (default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ swp swo idea coverage env venv Icon?)"
   echo -e "  ${yellow}-n${reset}  Include files without extensions"
   echo -e "  ${yellow}-p${reset}  Patterns for files without extensions (requires -n)"
   echo -e "  ${yellow}-h${reset}  Show this help message"
@@ -28,7 +28,7 @@ show_help() {
 # Default values
 default_directories=(".")
 default_extensions=("js" "ts" "html" "css" "py" "go" "java" "c" "cpp" "cs" "rb" "rs" "php" "sh" "zsh" "md" "txt")
-default_ignore=("ico" "png" "jpg" "jpeg" "gif" "svg" "out")
+default_ignore=("ico" "png" "jpg" "jpeg" "gif" "svg" "out" "log" "tmp" "dist" "build" "DS_Store" "__pycache__" "swp" "swo" "idea" "coverage" "env" "venv" "Icon?")
 
 # Initialize variables for new options
 include_no_extension="n"
@@ -84,7 +84,7 @@ if [ "$interactive" = true ]; then
   read -r -a extensions <<<"${input_extensions:-${default_extensions[@]}}"
 
   # Prompt for ignore patterns
-  read -rp "$(echo -e "${yellow}• Enter file types to ignore ${cyan}(default: ico png jpg jpeg gif svg out): ${reset}")" input_ignore
+  read -rp "$(echo -e "${yellow}• Enter file types to ignore ${cyan}(default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ swp swo idea coverage env venv Icon?): ${reset}")" input_ignore
   read -r -a ignore_patterns <<<"${input_ignore:-${default_ignore[@]}}"
 
   # Ask about files without extensions
@@ -104,7 +104,7 @@ if [ "$interactive" = true ]; then
     cmd+=" -e \"${extensions[*]}\""
   fi
 
-  if [[ "${ignore_patterns[*]}" != "${default_ignore[@]}" ]]; then
+  if [[ "${ignore_patterns[*]}" != "${default_ignore[*]}" ]]; then
     cmd+=" -i \"${ignore_patterns[*]}\""
   fi
 
@@ -139,9 +139,6 @@ eza -A --git --icons=auto --tree --level=2 --ignore-glob '.git|node_modules|*.lo
 echo -e "\n====================" >>"$output_file"
 echo "File Contents:" >>"$output_file"
 echo -e "====================\n" >>"$output_file"
-
-# Start file content section
-# echo -e "${green}Generating project structure...${reset}"
 
 # Process each directory
 for dir in "${directories[@]}"; do
