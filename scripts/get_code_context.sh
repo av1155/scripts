@@ -19,7 +19,7 @@ show_help() {
   echo -e "  ${blue}those will replace the default arguments.${reset}"
   echo -e "  ${yellow}-d${reset}  Directories to include (default: . )"
   echo -e "  ${yellow}-e${reset}  File extensions to include (default: js ts html css py go java c cpp cs rb rs lua php sh zsh md txt)"
-  echo -e "  ${yellow}-i${reset}  File types to ignore (default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ swp swo idea coverage env venv Icon?)"
+  echo -e "  ${yellow}-i${reset}  File types to ignore (default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ jar swp swo idea coverage env venv Icon?)"
   echo -e "  ${yellow}-n${reset}  Include files without extensions"
   echo -e "  ${yellow}-p${reset}  Patterns for files without extensions (requires -n)"
   echo -e "  ${yellow}-h${reset}  Show this help message"
@@ -28,7 +28,7 @@ show_help() {
 # Default values
 default_directories=(".")
 default_extensions=("js" "ts" "html" "css" "py" "go" "java" "c" "cpp" "cs" "rb" "rs" "lua" "php" "sh" "zsh" "md" "txt")
-default_ignore=("ico" "png" "jpg" "jpeg" "gif" "svg" "out" "log" "tmp" "dist" "build" "DS_Store" "__pycache__" "swp" "swo" "idea" "coverage" "env" "venv" "Icon?")
+default_ignore=("ico" "png" "jpg" "jpeg" "gif" "svg" "out" "log" "tmp" "dist" "build" "DS_Store" "__pycache__" "jar" "swp" "swo" "idea" "coverage" "env" "venv" "Icon?")
 
 # Initialize variables for new options
 include_no_extension="n"
@@ -38,16 +38,18 @@ no_extension_patterns=""
 directories=("${default_directories[@]}")
 extensions=("${default_extensions[@]}")
 ignore_patterns=("${default_ignore[@]}")
+excluded_directories=()
 
 # Parse command-line options
 interactive=false
-while getopts "d:e:i:p:nh" flag; do
+while getopts "d:e:i:p:x:nh" flag; do
   case "${flag}" in
-  d) read -r -a directories <<<"${OPTARG}" ;;     # User-provided directories
-  e) read -r -a extensions <<<"${OPTARG}" ;;      # User-provided extensions
-  i) read -r -a ignore_patterns <<<"${OPTARG}" ;; # User-provided ignore patterns
-  n) include_no_extension="y" ;;                  # Include files without extensions
-  p) no_extension_patterns="${OPTARG}" ;;         # Patterns for files without extensions
+  d) read -r -a directories <<<"${OPTARG}" ;;          # User-provided directories
+  e) read -r -a extensions <<<"${OPTARG}" ;;           # User-provided extensions
+  i) read -r -a ignore_patterns <<<"${OPTARG}" ;;      # User-provided ignore patterns
+  x) read -r -a excluded_directories <<<"${OPTARG}" ;; # User-provided directories to exclude
+  n) include_no_extension="y" ;;                       # Include files without extensions
+  p) no_extension_patterns="${OPTARG}" ;;              # Patterns for files without extensions
   h)
     show_help
     exit 0
@@ -84,8 +86,12 @@ if [ "$interactive" = true ]; then
   read -r -a extensions <<<"${input_extensions:-${default_extensions[@]}}"
 
   # Prompt for ignore patterns
-  read -rp "$(echo -e "${yellow}• Enter file types to ignore ${cyan}(default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ swp swo idea coverage env venv Icon?): ${reset}")" input_ignore
+  read -rp "$(echo -e "${yellow}• Enter file types to ignore ${cyan}(default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ jar swp swo idea coverage env venv Icon?): ${reset}")" input_ignore
   read -r -a ignore_patterns <<<"${input_ignore:-${default_ignore[@]}}"
+
+  # Prompt for excluded directories
+  read -rp "$(echo -e "${yellow}• Enter directories to exclude (optional): ${reset}")" input_excluded_directories
+  read -r -a excluded_directories <<<"${input_excluded_directories}"
 
   # Ask about files without extensions
   read -rp "$(echo -e "${yellow}• Do you want to include files without extensions? [y/N]: ${reset}")" include_no_extension
@@ -106,6 +112,10 @@ if [ "$interactive" = true ]; then
 
   if [[ "${ignore_patterns[*]}" != "${default_ignore[*]}" ]]; then
     cmd+=" -i \"${ignore_patterns[*]}\""
+  fi
+
+  if [[ "${excluded_directories[*]}" != "" ]]; then
+    cmd+=" -x \"${excluded_directories[*]}\""
   fi
 
   if [ "$include_no_extension" == "y" ]; then
@@ -148,7 +158,7 @@ for dir in "${directories[@]}"; do
   fi
 
   # Construct fd command for files with extensions
-  fd_command_ext="fd --type f"
+  fd_command_ext="fd --hidden --type f"
 
   # Add extensions to the fd command
   for ext in "${extensions[@]}"; do
@@ -158,6 +168,11 @@ for dir in "${directories[@]}"; do
   # Add ignored patterns
   for ignore in "${ignore_patterns[@]}"; do
     fd_command_ext+=" --exclude '*.$ignore'"
+  done
+
+  # Add excluded directories
+  for exclude_dir in "${excluded_directories[@]}"; do
+    fd_command_ext+=" --exclude $exclude_dir"
   done
 
   # Add directory to process
@@ -176,11 +191,15 @@ for dir in "${directories[@]}"; do
 
   # If including files without extensions
   if [ "$include_no_extension" == "y" ]; then
-    fd_command_no_ext="fd --type f"
+    fd_command_no_ext="fd --hidden --type f"
 
     # Add ignored patterns
     for ignore in "${ignore_patterns[@]}"; do
       fd_command_no_ext+=" --exclude '*.$ignore'"
+    done
+
+    for exclude_dir in "${excluded_directories[@]}"; do
+      fd_command_no_ext+=" --exclude $exclude_dir"
     done
 
     # Handle files without extensions
