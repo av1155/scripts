@@ -50,7 +50,7 @@ update_homebrew() {
 		brew upgrade
 		brew cleanup
 		brew autoremove
-		cd "$HOME/.dotfiles/configs/MacOS-Bootstrap"
+		cd "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap"
 		rm Brewfile
 		brew bundle dump --describe --no-lock
 
