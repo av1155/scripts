@@ -133,7 +133,7 @@ output_file="${project_dir}/code_context.txt"
 echo "====================" >"$output_file"
 echo "Project Structure:" >>"$output_file"
 echo "====================" >>"$output_file"
-eza -A --git --icons=auto --tree --level=3 --ignore-glob '.git|node_modules|*.log|*.tmp|dist|build|.DS_Store|__pycache__|*.swp|*.swo|.idea|coverage|env|venv|Icon?' >>"$output_file"
+eza -A --git --icons=auto --tree --level=3 --ignore-glob '.git|.idea|__pycache__|node_modules|dist|build|*.log|*.tmp|*.swp|*.swo|*.ttf|coverage|env|venv|Icon?|.DS_Store' >>"$output_file"
 
 # Add separation for clarity before listing the file contents
 echo -e "\n====================" >>"$output_file"
