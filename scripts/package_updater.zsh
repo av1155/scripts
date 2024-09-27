@@ -372,6 +372,20 @@ update_java() {
 	rmdir "$EXTRACT_LOCATION"
 }
 
+# Update Ruby gems
+update_gems() {
+    if command_exists gem; then
+        echo_color $BLUE "Updating Ruby gems..."
+        gem update --system
+        gem update
+        gem cleanup
+        echo_color $GREEN "Ruby gems have been updated."
+        echo_color $ORANGE "====================================================================================\n"
+    else
+        echo_color $RED "Ruby gem command not found. Skipping gem update..."
+    fi
+}
+
 # MAIN SCRIPT =====================================================================
 
 # Function to manage log files
@@ -439,6 +453,7 @@ main() {
 	update_npm
 	# update_astronvim
 	# update_java # UNCOMMENT TO UPDATE JAVA
+	update_gems
 	gh extension upgrade gh-copilot
 	echo_color $GREEN "All applicable packages and applications updated.\n"
 
