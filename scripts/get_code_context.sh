@@ -18,7 +18,7 @@ show_help() {
   echo -e "  ${blue}If any arguments are provided instead of the defaults,${reset}"
   echo -e "  ${blue}those will replace the default arguments.${reset}"
   echo -e "  ${yellow}-d${reset}  Directories to include (default: . )"
-  echo -e "  ${yellow}-e${reset}  File extensions to include (default: js ts html css py go java c cpp cs rb rs php sh zsh md txt)"
+  echo -e "  ${yellow}-e${reset}  File extensions to include (default: js ts html css py go java c cpp cs rb rs lua php sh zsh md txt)"
   echo -e "  ${yellow}-i${reset}  File types to ignore (default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ swp swo idea coverage env venv Icon?)"
   echo -e "  ${yellow}-n${reset}  Include files without extensions"
   echo -e "  ${yellow}-p${reset}  Patterns for files without extensions (requires -n)"
@@ -27,7 +27,7 @@ show_help() {
 
 # Default values
 default_directories=(".")
-default_extensions=("js" "ts" "html" "css" "py" "go" "java" "c" "cpp" "cs" "rb" "rs" "php" "sh" "zsh" "md" "txt")
+default_extensions=("js" "ts" "html" "css" "py" "go" "java" "c" "cpp" "cs" "rb" "rs" "lua" "php" "sh" "zsh" "md" "txt")
 default_ignore=("ico" "png" "jpg" "jpeg" "gif" "svg" "out" "log" "tmp" "dist" "build" "DS_Store" "__pycache__" "swp" "swo" "idea" "coverage" "env" "venv" "Icon?")
 
 # Initialize variables for new options
@@ -80,7 +80,7 @@ if [ "$interactive" = true ]; then
   read -r -a directories <<<"${input_directories:-${default_directories[@]}}"
 
   # Prompt for extensions
-  read -rp "$(echo -e "${yellow}• Enter file extensions to include ${cyan}(default: js ts html css py go java c cpp cs rb rs php sh zsh md txt): ${reset}")" input_extensions
+  read -rp "$(echo -e "${yellow}• Enter file extensions to include ${cyan}(default: js ts html css py go java c cpp cs rb rs lua php sh zsh md txt): ${reset}")" input_extensions
   read -r -a extensions <<<"${input_extensions:-${default_extensions[@]}}"
 
   # Prompt for ignore patterns
