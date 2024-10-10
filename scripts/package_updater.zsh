@@ -10,6 +10,9 @@ if [ ! -t 0 ]; then
 
 	# Set the ZSH variable to the Oh My Zsh directory
 	export ZSH="/Users/andreaventi/.oh-my-zsh"
+
+    # Ensure Homebrew Ruby is prioritized over system Ruby
+    export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 fi
 
 # Initialize Conda for script usage
