@@ -307,6 +307,21 @@ update_npm() {
 	fi
 }
 
+# Update pnpm packages
+update_pnpm() {
+	if command_exists pnpm; then
+		echo_color $BLUE "Updating pnpm global packages..."
+		pnpm -g up || {
+			echo_color $RED "Failed to update pnpm packages."
+			exit 1
+		}
+		echo_color $GREEN "pnpm global packages have been updated."
+		echo_color $ORANGE "====================================================================================\n"
+	else
+		echo_color $RED "pnpm not found. Skipping..."
+	fi
+}
+
 # Update AstroNvim
 update_astronvim() {
 	if command_exists nvim; then
@@ -454,6 +469,7 @@ main() {
 	# update_mas
 	update_node
 	update_npm
+	update_pnpm
 	# update_astronvim
 	# update_java # UNCOMMENT TO UPDATE JAVA
 	update_gems
