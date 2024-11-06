@@ -77,6 +77,28 @@ update_homebrew() {
 	fi
 }
 
+# Function to remove YAML files for deleted Conda environments
+remove_deleted_env_backups() {
+    local BACKUP_DIR="${HOME}/CondaBackup"
+    
+    # Get a list of current Conda environments
+    local current_envs=$(conda env list | awk '{print $1}' | grep -vE '^\#')
+
+    echo_color $BLUE "Checking for deleted environments to remove from backup..."
+    for file in "$BACKUP_DIR"/*.yml; do
+        env_name=$(basename "$file" .yml)
+        if ! echo "$current_envs" | grep -qx "$env_name"; then
+            echo_color $YELLOW "Removing outdated environment backup: $env_name"
+            rm "$file" || {
+                echo_color $RED "Failed to delete outdated file $file."
+                exit 1
+            }
+        fi
+    done
+    echo_color $GREEN "Cleanup of deleted environment backups complete."
+    echo_color $ORANGE "====================================================================================\n"
+}
+
 # Update miniforge + Conda environments
 update_conda_environments() {
 	if command_exists conda; then
@@ -225,6 +247,48 @@ update_mas() {
 	fi
 }
 
+# Function to update NVM (Node Version Manager)
+update_nvm() {
+    # Check if NVM is installed
+    if [ -d "$HOME/.nvm" ]; then
+        # Load NVM for version check
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+        # Fetch the latest NVM version from GitHub README
+        LATEST_NVM_VERSION=$(curl -sL 'https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/README.md' \
+                                | grep -oE 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install.sh' \
+                                | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' \
+                                | head -n 1)
+
+        # Default to v0.40.1 if no version is found
+        if [ -z "$LATEST_NVM_VERSION" ]; then
+            echo_color $RED "Failed to fetch the latest NVM version, defaulting to v0.40.1."
+            LATEST_NVM_VERSION="v0.40.1"
+        fi
+
+        # Get the current installed NVM version
+        CURRENT_NVM_VERSION=$(nvm --version 2>/dev/null)
+
+        # Compare versions and update if needed
+        if [ "$CURRENT_NVM_VERSION" != "${LATEST_NVM_VERSION#v}" ]; then
+            echo_color $BLUE "Updating NVM from version $CURRENT_NVM_VERSION to $LATEST_NVM_VERSION..."
+            curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM_VERSION}/install.sh" | bash || {
+                echo_color $RED "Failed to update NVM."
+                exit 1
+            }
+            # Reload NVM after update
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            echo_color $GREEN "NVM updated to version $LATEST_NVM_VERSION."
+        else
+            echo_color $GREEN "NVM is already up-to-date (version $CURRENT_NVM_VERSION)."
+        fi
+    else
+        echo_color $RED "NVM not found. Skipping NVM update..."
+    fi
+    echo_color $ORANGE "====================================================================================\n"
+}
+
 # Update Node.js using NVM
 update_node() {
 	if command_exists nvm; then
@@ -357,8 +421,16 @@ update_astronvim() {
 
 # Update Java
 update_java() {
-	# ARM architecture (Apple Silicon)
-	JDK_URL="https://download.oracle.com/java/22/latest/jdk-22_macos-aarch64_bin.tar.gz"
+	JDK_PAGE_URL="https://www.oracle.com/java/technologies/downloads/#jdk"
+
+	# Fetch the page and extract the link
+    JDK_URL=$(curl -sL $JDK_PAGE_URL | grep -oE 'https://download.oracle.com/java/[0-9]+/latest/jdk-[0-9]+_macos-aarch64_bin.tar.gz' | head -n 1)
+
+	# If JDK_URL is not found, exit with error
+	if [ -z "$JDK_URL" ]; then
+    	color_echo $RED "Failed to find the latest JDK download link."
+    	exit 1
+	fi
 
 	# Define the download and extraction location
 	DOWNLOAD_LOCATION="$HOME/Downloads"
@@ -368,22 +440,22 @@ update_java() {
 	mkdir -p "$EXTRACT_LOCATION"
 
 	# Download the tar.gz file to the extraction directory
-	echo_color $ORANGE "Downloading and extracting JDK..."
-	curl -L $JDK_URL | tar -xz -C "$EXTRACT_LOCATION"
+	color_echo $YELLOW "Downloading and extracting JDK from $JDK_URL..."
+	curl -L "$JDK_URL" | tar -xz -C "$EXTRACT_LOCATION"
 
 	# Determine the name of the top-level directory in the extracted location
 	JDK_DIR_NAME=$(ls "$EXTRACT_LOCATION" | grep 'jdk')
 
 	# Check if this directory already exists in the target directory
 	if [ ! -d "$HOME/Library/Java/JavaVirtualMachines/$JDK_DIR_NAME" ]; then
-		echo_color $GREEN "Installing Java..."
-		# Move the JDK directory to the Java Virtual Machines directory
-		mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
-		echo_color $GREEN "Java installed successfully."
+    	color_echo $GREEN "Installing Java..."
+    	# Move the JDK directory to the Java Virtual Machines directory
+    	mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
+    	color_echo $GREEN "Java installed successfully."
 	else
-		echo_color $BLUE "Java is already installed. No action taken."
-		# Remove the extracted JDK if already installed
-		rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
+    	color_echo $BLUE "Java is already installed. No action taken, residual files have been removed."
+    	# Remove the extracted JDK if already installed
+    	rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
 	fi
 
 	# Remove the extraction directory if empty
@@ -462,16 +534,18 @@ send_update_report() {
 # Main script execution
 main() {
 	update_homebrew
+	remove_deleted_env_backups
 	update_conda_environments
 	backup_conda_environments
 	update_tmux_plugins
 	update_omz
 	# update_mas
+	update_nvm
 	update_node
 	update_npm
 	update_pnpm
 	# update_astronvim
-	# update_java # UNCOMMENT TO UPDATE JAVA
+	update_java
 	update_gems
 	gh extension upgrade gh-copilot
 	echo_color $GREEN "All applicable packages and applications updated.\n"

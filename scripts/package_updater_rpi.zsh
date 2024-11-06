@@ -105,6 +105,28 @@ update_omz() {
     fi
 }
 
+# Function to remove YAML files for deleted Conda environments
+remove_deleted_env_backups() {
+    local BACKUP_DIR="${HOME}/CondaBackup-RPI"
+    
+    # Get a list of current Conda environments
+    local current_envs=$(conda env list | awk '{print $1}' | grep -vE '^\#')
+
+    echo_color $BLUE "Checking for deleted environments to remove from backup..."
+    for file in "$BACKUP_DIR"/*.yml; do
+        env_name=$(basename "$file" .yml)
+        if ! echo "$current_envs" | grep -qx "$env_name"; then
+            echo_color $YELLOW "Removing outdated environment backup: $env_name"
+            rm "$file" || {
+                echo_color $RED "Failed to delete outdated file $file."
+                exit 1
+            }
+        fi
+    done
+    echo_color $GREEN "Cleanup of deleted environment backups complete."
+    echo_color $ORANGE "====================================================================================\n"
+}
+
 # Update miniforge + Conda environments
 update_conda_environments() {
     if command_exists conda; then
