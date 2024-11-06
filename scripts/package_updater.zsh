@@ -88,7 +88,7 @@ remove_deleted_env_backups() {
     for file in "$BACKUP_DIR"/*.yml; do
         env_name=$(basename "$file" .yml)
         if ! echo "$current_envs" | grep -qx "$env_name"; then
-            echo_color $YELLOW "Removing outdated environment backup: $env_name"
+            echo_color $ORANGE "Removing outdated environment backup: $env_name"
             rm "$file" || {
                 echo_color $RED "Failed to delete outdated file $file."
                 exit 1
@@ -421,6 +421,7 @@ update_astronvim() {
 
 # Update Java
 update_java() {
+	echo_color $BLUE "Updating Java JDK..."
 	JDK_PAGE_URL="https://www.oracle.com/java/technologies/downloads/#jdk"
 
 	# Fetch the page and extract the link
@@ -428,7 +429,7 @@ update_java() {
 
 	# If JDK_URL is not found, exit with error
 	if [ -z "$JDK_URL" ]; then
-    	color_echo $RED "Failed to find the latest JDK download link."
+    	echo_color $RED "Failed to find the latest JDK download link."
     	exit 1
 	fi
 
@@ -440,7 +441,7 @@ update_java() {
 	mkdir -p "$EXTRACT_LOCATION"
 
 	# Download the tar.gz file to the extraction directory
-	color_echo $YELLOW "Downloading and extracting JDK from $JDK_URL..."
+	echo_color $ORANGE "Downloading and extracting JDK from $JDK_URL..."
 	curl -L "$JDK_URL" | tar -xz -C "$EXTRACT_LOCATION"
 
 	# Determine the name of the top-level directory in the extracted location
@@ -448,18 +449,20 @@ update_java() {
 
 	# Check if this directory already exists in the target directory
 	if [ ! -d "$HOME/Library/Java/JavaVirtualMachines/$JDK_DIR_NAME" ]; then
-    	color_echo $GREEN "Installing Java..."
+    	echo_color $GREEN "Installing Java..."
     	# Move the JDK directory to the Java Virtual Machines directory
     	mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
-    	color_echo $GREEN "Java installed successfully."
+    	echo_color $GREEN "Java installed successfully."
 	else
-    	color_echo $BLUE "Java is already installed. No action taken, residual files have been removed."
+    	echo_color $BLUE "Java is already installed. No action taken, residual files have been removed."
     	# Remove the extracted JDK if already installed
     	rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
 	fi
 
 	# Remove the extraction directory if empty
 	rmdir "$EXTRACT_LOCATION"
+	
+	echo_color $ORANGE "====================================================================================\n"
 }
 
 # Update Ruby gems
