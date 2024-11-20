@@ -199,9 +199,9 @@ backup_conda_environments() {
 
 # Function to update tmux TPM plugins
 update_tmux_plugins() {
-    if [ -d "$HOME/.dotfiles/.config/tmux/plugins/tpm" ]; then
+    if [ -d "$HOME/.tmux/plugins/tpm" ]; then
         echo_color $BLUE "Updating tmux TPM plugins..."
-        "$HOME/.dotfiles/.config/tmux/plugins/tpm/scripts/update_plugin.sh" all
+        "$HOME/.tmux/plugins/tpm/bin/update_plugins" all
         if [ $? -eq 0 ]; then
             echo_color $GREEN "\nAll tmux TPM plugins have been updated."
         else
