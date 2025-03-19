@@ -55,7 +55,7 @@ update_homebrew() {
 		brew autoremove
 		cd "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap"
 		rm Brewfile
-		brew bundle dump --describe --no-lock
+		brew bundle dump --describe
 
 		# Push changes to GitHub
 		echo_color $BLUE "Pushing changes to GitHub..."
