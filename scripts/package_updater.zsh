@@ -442,8 +442,17 @@ update_java() {
 	echo_color $ORANGE "Downloading and extracting JDK from $JDK_URL..."
 	curl -L "$JDK_URL" | tar -xz -C "$EXTRACT_LOCATION"
 
-	# Determine the name of the top-level directory in the extracted location
-	JDK_DIR_NAME=$(ls "$EXTRACT_LOCATION" | grep 'jdk')
+	# Find the extracted directory that ends with .jdk
+	JDK_DIR_NAME=$(find "$EXTRACT_LOCATION" -maxdepth 1 -type d -name "*.jdk" -exec basename {} \;)
+
+	# Make sure it's a valid macOS JDK bundle with Info.plist
+	if [ ! -f "$EXTRACT_LOCATION/$JDK_DIR_NAME/Contents/Info.plist" ]; then
+    	echo_color $RED "Extracted JDK is missing Info.plist — invalid macOS .jdk bundle."
+    	echo_color $RED "Skipping install to prevent a broken Java setup."
+    	rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
+    	rmdir "$EXTRACT_LOCATION"
+    	return
+	fi
 
 	# Check if this directory already exists in the target directory
 	if [ ! -d "$HOME/Library/Java/JavaVirtualMachines/$JDK_DIR_NAME" ]; then
