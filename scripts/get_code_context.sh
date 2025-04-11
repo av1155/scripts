@@ -1,55 +1,55 @@
 #!/bin/bash
 
-# Define colors for output
+# Define colors
 bold="\033[1m"
 green="\033[32m"
 yellow="\033[33m"
 blue="\033[34m"
 red="\033[31m"
-cyan="\033[36m"
 light_magenta="\033[95m"
 reset="\033[0m"
 
-# Display help message
+# Display help
 show_help() {
   echo -e "${bold}Usage:${reset} $0 [options]"
   echo ""
   echo -e "${bold}Options:${reset}"
-  echo -e "  ${blue}If any arguments are provided instead of the defaults,${reset}"
-  echo -e "  ${blue}those will replace the default arguments.${reset}"
   echo -e "  ${yellow}-d${reset}  Directories to include (default: . )"
   echo -e "  ${yellow}-e${reset}  File extensions to include (default: js ts tsx html css py go java c cpp cs rb rs lua php sh zsh md txt)"
   echo -e "  ${yellow}-i${reset}  File types to ignore (default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ jar swp swo idea coverage env venv Icon?)"
+  echo -e "  ${yellow}-x${reset}  Directories to exclude from search"
   echo -e "  ${yellow}-n${reset}  Include files without extensions"
   echo -e "  ${yellow}-p${reset}  Patterns for files without extensions (requires -n)"
+  echo -e "  ${yellow}-o${reset}  Output file name (default: code_context.txt)"
   echo -e "  ${yellow}-h${reset}  Show this help message"
 }
 
-# Default values
+# Defaults
 default_directories=(".")
 default_extensions=("js" "ts" "tsx" "html" "css" "py" "go" "java" "c" "cpp" "cs" "rb" "rs" "lua" "php" "sh" "zsh" "md" "txt")
 default_ignore=("ico" "png" "jpg" "jpeg" "gif" "svg" "out" "log" "tmp" "dist" "build" "DS_Store" "__pycache__" "jar" "swp" "swo" "idea" "coverage" "env" "venv" "Icon?")
+output_file="code_context.txt"
 
-# Initialize variables for new options
 include_no_extension="n"
 no_extension_patterns=""
 
-# Initialize arrays with default values
+# Initialize with defaults
 directories=("${default_directories[@]}")
 extensions=("${default_extensions[@]}")
 ignore_patterns=("${default_ignore[@]}")
 excluded_directories=()
-
-# Parse command-line options
 interactive=false
-while getopts "d:e:i:p:x:nh" flag; do
+
+# Parse options
+while getopts "d:e:i:x:p:o:nh" flag; do
   case "${flag}" in
-  d) read -r -a directories <<<"${OPTARG}" ;;          # User-provided directories
-  e) read -r -a extensions <<<"${OPTARG}" ;;           # User-provided extensions
-  i) read -r -a ignore_patterns <<<"${OPTARG}" ;;      # User-provided ignore patterns
-  x) read -r -a excluded_directories <<<"${OPTARG}" ;; # User-provided directories to exclude
-  n) include_no_extension="y" ;;                       # Include files without extensions
-  p) no_extension_patterns="${OPTARG}" ;;              # Patterns for files without extensions
+  d) IFS=' ' read -ra directories <<<"${OPTARG}" ;;
+  e) IFS=' ' read -ra extensions <<<"${OPTARG}" ;;
+  i) IFS=' ' read -ra ignore_patterns <<<"${OPTARG}" ;;
+  x) IFS=' ' read -ra excluded_directories <<<"${OPTARG}" ;;
+  o) output_file="${OPTARG}" ;;
+  n) include_no_extension="y" ;;
+  p) no_extension_patterns="${OPTARG}" ;;
   h)
     show_help
     exit 0
@@ -61,182 +61,169 @@ while getopts "d:e:i:p:x:nh" flag; do
   esac
 done
 
-# Shift the arguments so that positional parameters start at the right place
 shift $((OPTIND - 1))
 
-# If no options are provided, enable interactive mode
 if [ $OPTIND -eq 1 ]; then
   interactive=true
 fi
 
-# Interactive mode for user input
+# Interactive fallback
 if [ "$interactive" = true ]; then
-  echo -e "${green}Interactive mode: No directories or extensions provided.${reset}"
-  echo -e "\n${blue}If any arguments are provided instead of the defaults,${reset}"
-  echo -e "${bold}${blue}those will replace the default arguments.${reset}"
-  echo -e "${blue}Arguments should be space separated, ex:${reset}"
-  echo -e "${blue}        ${red}directory1 directory2 txt java html css${reset}"
+  echo -e "${green}Interactive mode: No options were provided.${reset}"
 
-  # Prompt for directories
-  read -rp "$(echo -e "\n${yellow}• Enter directories to include ${cyan}(default: . ): ${reset}")" input_directories
-  read -r -a directories <<<"${input_directories:-${default_directories[@]}}"
+  read -rp "$(echo -e "${yellow}• Directories to include (default: .): ${reset}")" input_directories
+  IFS=' ' read -ra directories <<<"${input_directories:-${default_directories[*]}}"
 
-  # Prompt for extensions
-  read -rp "$(echo -e "${yellow}• Enter file extensions to include ${cyan}(default: js ts tsx html css py go java c cpp cs rb rs lua php sh zsh md txt): ${reset}")" input_extensions
-  read -r -a extensions <<<"${input_extensions:-${default_extensions[@]}}"
+  read -rp "$(echo -e "${yellow}• File extensions to include (default: ${default_extensions[*]}): ${reset}")" input_extensions
+  IFS=' ' read -ra extensions <<<"${input_extensions:-${default_extensions[*]}}"
 
-  # Prompt for ignore patterns
-  read -rp "$(echo -e "${yellow}• Enter file types to ignore ${cyan}(default: ico png jpg jpeg gif svg out log tmp dist build .DS_Store __pycache__ jar swp swo idea coverage env venv Icon?): ${reset}")" input_ignore
-  read -r -a ignore_patterns <<<"${input_ignore:-${default_ignore[@]}}"
+  read -rp "$(echo -e "${yellow}• File types to ignore (default: ${default_ignore[*]}): ${reset}")" input_ignore
+  IFS=' ' read -ra ignore_patterns <<<"${input_ignore:-${default_ignore[*]}}"
 
-  # Prompt for excluded directories
-  read -rp "$(echo -e "${yellow}• Enter directories to exclude (optional): ${reset}")" input_excluded_directories
-  read -r -a excluded_directories <<<"${input_excluded_directories}"
+  read -rp "$(echo -e "${yellow}• Directories to exclude (optional): ${reset}")" input_excluded
+  IFS=' ' read -ra excluded_directories <<<"${input_excluded}"
 
-  # Ask about files without extensions
-  read -rp "$(echo -e "${yellow}• Do you want to include files without extensions? [y/N]: ${reset}")" include_no_extension
+  read -rp "$(echo -e "${yellow}• Include files without extensions? [y/N]: ${reset}")" include_no_extension
   if [ "$include_no_extension" == "y" ]; then
-    read -rp "$(echo -e "${yellow}• Enter the specific names or patterns for files without extensions to include (or press ${cyan}Enter${yellow} to include all): ${reset}")" no_extension_patterns
+    read -rp "$(echo -e "${yellow}• Patterns for no-extension files (optional): ${reset}")" no_extension_patterns
   fi
 
-  # Construct the equivalent command
-  cmd="./get_code_context.sh"
+  # Print suggested rerun command
+  rerun_cmd=("getc")
+  [ -n "${directories[*]}" ] && rerun_cmd+=("-d" "\"${directories[*]}\"")
+  [ -n "${extensions[*]}" ] && rerun_cmd+=("-e" "\"${extensions[*]}\"")
+  [ -n "${ignore_patterns[*]}" ] && rerun_cmd+=("-i" "\"${ignore_patterns[*]}\"")
+  [ -n "${excluded_directories[*]}" ] && rerun_cmd+=("-x" "\"${excluded_directories[*]}\"")
+  [ "$include_no_extension" == "y" ] && rerun_cmd+=("-n")
+  [ -n "$no_extension_patterns" ] && rerun_cmd+=("-p" "\"$no_extension_patterns\"")
+  [ "$output_file" != "code_context.txt" ] && rerun_cmd+=("-o" "\"$output_file\"")
 
-  if [[ "${directories[*]}" != "${default_directories[*]}" ]]; then
-    cmd+=" -d \"${directories[*]}\""
-  fi
-
-  if [[ "${extensions[*]}" != "${default_extensions[*]}" ]]; then
-    cmd+=" -e \"${extensions[*]}\""
-  fi
-
-  if [[ "${ignore_patterns[*]}" != "${default_ignore[*]}" ]]; then
-    cmd+=" -i \"${ignore_patterns[*]}\""
-  fi
-
-  if [[ "${excluded_directories[*]}" != "" ]]; then
-    cmd+=" -x \"${excluded_directories[*]}\""
-  fi
-
-  if [ "$include_no_extension" == "y" ]; then
-    cmd+=" -n"
-    if [ -n "$no_extension_patterns" ]; then
-      cmd+=" -p \"${no_extension_patterns}\""
-    fi
-  fi
-
-  echo -e "\n${green}Equivalent command:${reset} $cmd"
+  echo -e "\n${blue}Rerun with:${reset} ${bold}${rerun_cmd[*]}${reset}\n"
 
 fi
 
-# Use default values if nothing is provided
-directories=("${directories[@]:-${default_directories[@]}}")
-extensions=("${extensions[@]:-${default_extensions[@]}}")
-ignore_patterns=("${ignore_patterns[@]:-${default_ignore[@]}}")
-
-# Define output file and clean up old file
+# Output file prep
 project_dir=$(pwd)
-output_file="${project_dir}/code_context.txt"
-[ -f "$output_file" ] && rm "$output_file"
+output_path="${project_dir}/${output_file}"
+[ -f "$output_path" ] && rm "$output_path"
 
-# Clear header to label the tree structure
-echo "====================" >"$output_file"
-echo "Project Structure:" >>"$output_file"
-echo "====================" >>"$output_file"
-eza -A --git --icons=auto --tree --level=3 --ignore-glob '.git|.idea|__pycache__|node_modules|dist|build|*.log|*.tmp|*.swp|*.swo|*.ttf|coverage|env|venv|Icon?|.DS_Store' >>"$output_file"
+{
+  echo "===================="
+  echo "Project Structure:"
+  echo "===================="
+} | tee -a "$output_path" >/dev/null
 
-# Add separation for clarity before listing the file contents
-echo -e "\n====================" >>"$output_file"
-echo "File Contents:" >>"$output_file"
-echo -e "====================\n" >>"$output_file"
+{
+  eza -A --git --icons=auto --tree --level=3 \
+    --ignore-glob '.git|.idea|__pycache__|node_modules|dist|build|*.log|*.tmp|*.swp|*.swo|*.ttf|coverage|env|venv|Icon?|.DS_Store'
+} | tee -a "$output_path" >/dev/null
 
-# Process each directory
+{
+  echo -e "\n===================="
+  echo "File Contents:"
+  echo -e "====================\n"
+} | tee -a "$output_path" >/dev/null
+
+# Timer
+start_time=$(date +%s.%N)
+
+# Search and extract
 for dir in "${directories[@]}"; do
   if [ ! -d "$dir" ]; then
-    echo "Warning: Directory '$dir' does not exist and will be skipped."
+    echo -e "${red}Warning:${reset} Directory '$dir' does not exist. Skipping."
     continue
   fi
 
-  # Construct fd command for files with extensions
-  fd_command_ext="fd --hidden --type f"
-
-  # Add extensions to the fd command
+  # With extension
+  fd_args=(--hidden --type f)
   for ext in "${extensions[@]}"; do
-    fd_command_ext+=" --extension $ext"
+    fd_args+=(--extension "$ext")
   done
-
-  # Add ignored patterns
   for ignore in "${ignore_patterns[@]}"; do
-    fd_command_ext+=" --exclude '*.$ignore'"
-  done
-
-  # Add excluded directories
-  for exclude_dir in "${excluded_directories[@]}"; do
-    fd_command_ext+=" --exclude $exclude_dir"
-  done
-
-  # Add directory to process
-  fd_command_ext+=" $dir"
-
-  # Debugging: Show constructed fd command for extensions
-  echo -e "\n${bold}${light_magenta}Constructed fd command (extensions):${reset} $fd_command_ext"
-
-  # Execute the fd command for files with extensions
-  eval "$fd_command_ext" | while read -r file; do
-    relative_path="${file#"$project_dir/"}"
-    echo "// File: $relative_path" >>"$output_file"
-    cat "$file" >>"$output_file"
-    echo "" >>"$output_file"
-  done
-
-  # If including files without extensions
-  if [ "$include_no_extension" == "y" ]; then
-    fd_command_no_ext="fd --hidden --type f"
-
-    # Add ignored patterns
-    for ignore in "${ignore_patterns[@]}"; do
-      fd_command_no_ext+=" --exclude '*.$ignore'"
+    skip=false
+    for ext in "${extensions[@]}"; do
+      if [[ "$ignore" == "$ext" ]]; then
+        skip=true
+        break
+      fi
     done
-
-    for exclude_dir in "${excluded_directories[@]}"; do
-      fd_command_no_ext+=" --exclude $exclude_dir"
-    done
-
-    # Handle files without extensions
-    if [ -z "$no_extension_patterns" ]; then
-      fd_command_no_ext+=" --regex '^[^.]+$'" # Match any file without extensions
-    else
-      # Build regex from user-provided patterns
-      regex_patterns=()
-      read -r -a patterns <<<"$no_extension_patterns"
-      for pattern in "${patterns[@]}"; do
-        regex_patterns+=("^$pattern$")
-      done
-      # Combine regex patterns
-      regex_pattern=$(printf "|%s" "${regex_patterns[@]}")
-      regex_pattern="${regex_pattern:1}" # Remove leading '|'
-      fd_command_no_ext+=" --regex '$regex_pattern'"
+    if [[ $skip == false ]]; then
+      fd_args+=(--exclude "*.$ignore")
     fi
+  done
 
-    # Add directory to process
-    fd_command_no_ext+=" $dir"
+  for xdir in "${excluded_directories[@]}"; do
+    fd_args+=(--exclude "$xdir")
+  done
 
-    # Debugging: Show constructed fd command for files without extensions
-    echo -e "${bold}${light_magenta}Constructed fd command (no extensions):${reset} $fd_command_no_ext"
+  echo -e "${bold}${light_magenta}\nScanning files with extensions in $dir...${reset}"
 
-    # Execute the fd command for files without extensions
-    eval "$fd_command_no_ext" | while read -r file; do
-      relative_path="${file#"$project_dir/"}"
-      echo "// File: $relative_path" >>"$output_file"
-      cat "$file" >>"$output_file"
-      echo "" >>"$output_file"
+  (
+    cd "$dir" || exit
+    fd "${fd_args[@]}" . | while IFS= read -r file; do
+      {
+        echo ""
+        echo "//===FILE_START=== $dir/$file"
+        cat "$file"
+        echo ""
+        echo "//===FILE_END==="
+        echo ""
+      } | tee -a "$output_path" >/dev/null
     done
+  )
+
+  # Without extension
+  if [ "$include_no_extension" == "y" ]; then
+    echo -e "${bold}${light_magenta}Scanning files without extensions in $dir...${reset}"
+
+    (
+      cd "$dir" || exit
+      fd_noext_args=(--hidden --type f)
+
+      for ignore in "${ignore_patterns[@]}"; do
+        skip=false
+        for ext in "${extensions[@]}"; do
+          if [[ "$ignore" == "$ext" ]]; then
+            skip=true
+            break
+          fi
+        done
+        if [[ $skip == false ]]; then
+          fd_noext_args+=(--exclude "*.$ignore")
+        fi
+      done
+
+      for xdir in "${excluded_directories[@]}"; do
+        fd_noext_args+=(--exclude "$xdir")
+      done
+
+      if [ -z "$no_extension_patterns" ]; then
+        fd_noext_args+=(--regex '^[^.]+$')
+      else
+        IFS=' ' read -ra patterns <<<"$no_extension_patterns"
+        regex=$(
+          IFS='|'
+          echo "^(${patterns[*]})$"
+        )
+        fd_noext_args+=(--regex "$regex")
+      fi
+
+      fd "${fd_noext_args[@]}" . | while IFS= read -r file; do
+        {
+          echo ""
+          echo "//===FILE_START=== $dir/$file"
+          cat "$file"
+          echo ""
+          echo "//===FILE_END==="
+          echo ""
+        } | tee -a "$output_path" >/dev/null
+      done
+    )
   fi
 done
 
-# Check if output file was created
-if [ -f "$output_file" ] && [ -s "$output_file" ]; then
-  echo -e "\n${green}Code context has been saved to $output_file${reset}\n"
-else
-  echo -e "${red}No files were found based on the input. Code context not generated.${reset}\n"
-fi
+# Done
+echo -e "\n${green}Code context saved to ${output_path}${reset}"
+end_time=$(date +%s.%N)
+elapsed=$(awk "BEGIN {print $end_time - $start_time}")
+printf "${blue}Execution time:${reset} %.3fs\n" "$elapsed"
