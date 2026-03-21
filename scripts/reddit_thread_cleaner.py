@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clean bulky Reddit thread JSON into a lightweight structure.
+Fetch and clean Reddit thread JSON into a lightweight structure.
 
 Keeps:
 - usernames
@@ -9,33 +9,26 @@ Keeps:
 - compact stats
 - full reply tree present in the input JSON
 
-Works best on Reddit JSON exports shaped like:
-- the standard /comments/<id>.json response (two Listing objects), or
-- a Listing / nested comment tree dump, or
-- a single comment / post object.
-
-Usage:
-  python reddit_thread_cleaner.py input.json
-  python reddit_thread_cleaner.py input.json -o cleaned.json
-  python reddit_thread_cleaner.py input.json --pretty
-
-Notes:
-- This cleans only what is already present in the file.
-- If your source JSON contains Reddit "more" placeholders instead of fully
-  expanded comments, this script preserves the placeholders but cannot fetch
-  missing comments offline.
+Features:
+- Accepts either a local JSON file or a Reddit post URL
+- Automatically converts a Reddit post URL to its .json endpoint
+- Interactive mode when no input is provided
+- Optional pretty-print output
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
+import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse, urlunparse
 
+import requests
 
-def pick(d: Dict[str, Any], *keys: str) -> Dict[str, Any]:
-    return {k: d[k] for k in keys if k in d and d[k] is not None}
+USER_AGENT = "linux:reddit-thread-cleaner:1.0 (by /u/your_username)"
 
 
 def listing_children(node: Any) -> List[Dict[str, Any]]:
@@ -53,7 +46,7 @@ def normalize_replies(raw: Any) -> List[Dict[str, Any]]:
 
 
 def comment_stats(data: Dict[str, Any]) -> Dict[str, Any]:
-    stats = {}
+    stats: Dict[str, Any] = {}
     for key in (
         "score",
         "created_utc",
@@ -70,7 +63,7 @@ def comment_stats(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def post_stats(data: Dict[str, Any]) -> Dict[str, Any]:
-    stats = {}
+    stats: Dict[str, Any] = {}
     for key in (
         "score",
         "upvote_ratio",
@@ -115,13 +108,13 @@ def clean_comment(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if kind != "t1":
         return None
 
-    replies = []
+    replies: List[Dict[str, Any]] = []
     for child in normalize_replies(data.get("replies")):
         cleaned = clean_comment(child)
         if cleaned is not None:
             replies.append(cleaned)
 
-    out = {
+    out: Dict[str, Any] = {
         "username": data.get("author"),
         "comment": data.get("body", ""),
         "upvotes": data.get("ups", data.get("score")),
@@ -140,42 +133,45 @@ def clean_comment(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 
 def find_first_post_object(obj: Any) -> Optional[Dict[str, Any]]:
-    """Try to find the main post (t3) in common Reddit JSON shapes."""
     if isinstance(obj, list):
-        # Standard Reddit comments endpoint: [post_listing, comments_listing]
         for item in obj:
             found = find_first_post_object(item)
-            if found:
+            if found is not None:
                 return found
         return None
 
     if isinstance(obj, dict):
         if obj.get("kind") == "t3":
             return obj
+
         if obj.get("kind") == "Listing":
             for child in obj.get("data", {}).get("children", []) or []:
                 found = find_first_post_object(child)
-                if found:
+                if found is not None:
                     return found
-        # Fallback for already-unwrapped objects
+
         data = obj.get("data")
-        if isinstance(data, dict) and (
-            "title" in data or obj.get("kind") == "t3" or data.get("name", "").startswith("t3_")
-        ):
-            return {"kind": "t3", "data": data}
+        if isinstance(data, dict):
+            name = data.get("name", "")
+            if (
+                "title" in data
+                or obj.get("kind") == "t3"
+                or (isinstance(name, str) and name.startswith("t3_"))
+            ):
+                return {"kind": "t3", "data": data}
 
     return None
 
 
 def find_comment_listing(obj: Any) -> List[Dict[str, Any]]:
-    """Return top-level comment nodes from common Reddit JSON shapes."""
     if isinstance(obj, list):
-        # Standard Reddit /comments/<id>.json response
         if len(obj) >= 2:
             second = obj[1]
             if isinstance(second, dict) and second.get("kind") == "Listing":
-                return second.get("data", {}).get("children", []) or []
-        # Otherwise search recursively and merge the first comment listing found
+                children = second.get("data", {}).get("children", []) or []
+                if isinstance(children, list):
+                    return children
+
         for item in obj:
             children = find_comment_listing(item)
             if children:
@@ -185,15 +181,17 @@ def find_comment_listing(obj: Any) -> List[Dict[str, Any]]:
     if isinstance(obj, dict):
         if obj.get("kind") == "Listing":
             children = obj.get("data", {}).get("children", []) or []
-            # If this listing itself is comments/more objects, use it.
-            if any(isinstance(c, dict) and c.get("kind") in {"t1", "more"} for c in children):
+            if any(
+                isinstance(c, dict) and c.get("kind") in {"t1", "more"}
+                for c in children
+            ):
                 return children
-            # Else recurse into children.
+
             for child in children:
                 nested = find_comment_listing(child)
                 if nested:
                     return nested
-        # Already unwrapped comment tree object?
+
         if obj.get("kind") in {"t1", "more"}:
             return [obj]
 
@@ -202,13 +200,13 @@ def find_comment_listing(obj: Any) -> List[Dict[str, Any]]:
 
 def clean_post(node: Dict[str, Any]) -> Dict[str, Any]:
     data = node.get("data", {})
-    out = {
+    out: Dict[str, Any] = {
         "title": data.get("title"),
         "author": data.get("author"),
         "post": data.get("selftext", data.get("body", "")),
         "upvotes": data.get("ups", data.get("score")),
         "downvotes": data.get("downs", 0),
-        "stats": post_stats(data),
+        "post_stats": post_stats(data),
     }
 
     for key_in, key_out in (
@@ -228,7 +226,7 @@ def clean_reddit_json(raw: Any) -> Dict[str, Any]:
     post_obj = find_first_post_object(raw)
     comment_nodes = find_comment_listing(raw)
 
-    cleaned_comments = []
+    cleaned_comments: List[Dict[str, Any]] = []
     for node in comment_nodes:
         cleaned = clean_comment(node)
         if cleaned is not None:
@@ -240,40 +238,169 @@ def clean_reddit_json(raw: Any) -> Dict[str, Any]:
         result["thread"].update(clean_post(post_obj))
 
     result["thread"]["comments"] = cleaned_comments
-    result["thread"]["stats"] = {
+    result["thread"]["thread_stats"] = {
         "top_level_items": len(comment_nodes),
-        "top_level_comments": sum(1 for n in comment_nodes if isinstance(n, dict) and n.get("kind") == "t1"),
-        "more_placeholders": sum(1 for n in comment_nodes if isinstance(n, dict) and n.get("kind") == "more"),
+        "top_level_comments": sum(
+            1 for n in comment_nodes if isinstance(n, dict) and n.get("kind") == "t1"
+        ),
+        "more_placeholders": sum(
+            1 for n in comment_nodes if isinstance(n, dict) and n.get("kind") == "more"
+        ),
     }
 
     return result
 
 
-def default_output_path(input_path: Path) -> Path:
-    return input_path.with_suffix("").with_name(input_path.stem + ".cleaned.json")
+def is_url(value: str) -> bool:
+    return value.startswith("http://") or value.startswith("https://")
+
+
+def reddit_json_url(url: str) -> str:
+    parsed = urlparse(url.strip())
+
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError("Not a valid URL.")
+
+    if "reddit.com" not in parsed.netloc and "redd.it" not in parsed.netloc:
+        raise ValueError("URL must be a Reddit URL.")
+
+    path = parsed.path.rstrip("/")
+    if not path.endswith(".json"):
+        path += ".json"
+
+    return urlunparse((parsed.scheme, parsed.netloc, path, "", "", ""))
+
+
+def slugify(text: str, fallback: str = "reddit_thread") -> str:
+    text = text.strip().lower()
+    text = re.sub(r"[^a-z0-9]+", "_", text)
+    text = text.strip("_")
+    return text or fallback
+
+
+def default_output_path_for_file(input_path: Path) -> Path:
+    return input_path.with_name(f"{input_path.stem}.cleaned.json")
+
+
+def default_output_path_for_url(cleaned: Dict[str, Any]) -> Path:
+    thread = cleaned.get("thread", {})
+    title = thread.get("title") or ""
+    post_id = thread.get("id") or "thread"
+    base = slugify(title, fallback=f"reddit_{post_id}")
+    return Path(f"{base}.cleaned.json")
+
+
+def fetch_json_from_url(url: str) -> Any:
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json",
+    }
+
+    response = requests.get(url, headers=headers, timeout=30)
+    response.raise_for_status()
+
+    content_type = response.headers.get("content-type", "")
+    if "json" not in content_type.lower():
+        raise ValueError(f"Expected JSON response, got: {content_type or 'unknown'}")
+
+    return response.json()
+
+
+def load_raw_input(source: str) -> Tuple[Any, str]:
+    if is_url(source):
+        json_url = reddit_json_url(source)
+        raw = fetch_json_from_url(json_url)
+        return raw, json_url
+
+    path = Path(source)
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    with path.open("r", encoding="utf-8") as f:
+        raw = json.load(f)
+    return raw, str(path)
+
+
+def interactive_prompt() -> argparse.Namespace:
+    print("Reddit Thread Cleaner")
+    print("- Paste a Reddit URL or local JSON file path.")
+    source = input("Input URL or file: ").strip()
+
+    pretty_answer = input("Pretty-print output? [y/N]: ").strip().lower()
+    pretty = pretty_answer in {"y", "yes"}
+
+    output = input("Output file (leave blank for auto): ").strip()
+
+    return argparse.Namespace(
+        input=source,
+        output=Path(output) if output else None,
+        pretty=pretty,
+    )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Clean Reddit thread JSON into a lightweight structure.")
-    parser.add_argument("input", type=Path, help="Path to the Reddit JSON file")
-    parser.add_argument("-o", "--output", type=Path, help="Output path (default: <input>.cleaned.json)")
-    parser.add_argument("--pretty", action="store_true", help="Pretty-print output JSON")
+    parser = argparse.ArgumentParser(
+        description="Fetch and clean Reddit thread JSON into a lightweight structure."
+    )
+    parser.add_argument(
+        "input",
+        nargs="?",
+        help="Reddit post URL or local JSON file path",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Output path (default: auto-generated)",
+    )
+    parser.add_argument(
+        "--pretty",
+        action="store_true",
+        help="Pretty-print output JSON",
+    )
+
     args = parser.parse_args()
 
-    with args.input.open("r", encoding="utf-8") as f:
-        raw = json.load(f)
+    if not args.input:
+        args = interactive_prompt()
 
-    cleaned = clean_reddit_json(raw)
-    output_path = args.output or default_output_path(args.input)
+    try:
+        raw, source_label = load_raw_input(args.input)
+        cleaned = clean_reddit_json(raw)
 
-    with output_path.open("w", encoding="utf-8") as f:
-        if args.pretty:
-            json.dump(cleaned, f, ensure_ascii=False, indent=2)
+        if args.output is not None:
+            output_path = args.output
+        elif is_url(args.input):
+            output_path = default_output_path_for_url(cleaned)
         else:
-            json.dump(cleaned, f, ensure_ascii=False, separators=(",", ":"))
-        f.write("\n")
+            output_path = default_output_path_for_file(Path(args.input))
 
-    print(output_path)
+        with output_path.open("w", encoding="utf-8") as f:
+            if args.pretty:
+                json.dump(cleaned, f, ensure_ascii=False, indent=2)
+            else:
+                json.dump(cleaned, f, ensure_ascii=False, separators=(",", ":"))
+            f.write("\n")
+
+        print(f"Source: {source_label}")
+        print(f"Saved:  {output_path}")
+
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"JSON parse error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except requests.HTTPError as e:
+        status = e.response.status_code if e.response is not None else "unknown"
+        print(f"HTTP error: {status}", file=sys.stderr)
+        sys.exit(1)
+    except requests.RequestException as e:
+        print(f"Network error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
