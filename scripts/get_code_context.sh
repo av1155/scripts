@@ -349,7 +349,8 @@ show_help() {
   echo -e "${bold}get_code_context v2.0${reset}"
   echo -e "Extract code context from a project into a single text file."
   echo ""
-  echo -e "${bold}Usage:${reset} $0 [options]"
+  local cmd="${0##*/}"
+  echo -e "${bold}Usage:${reset} ${cmd} [options]"
   echo ""
   echo -e "${bold}Options:${reset}"
   echo -e "  ${yellow}-a${reset}  Auto-detect project type and apply best config"
@@ -372,13 +373,11 @@ show_help() {
   echo -e "  ${dim}Skip: binary files, lock files (package-lock.json, yarn.lock, ...), files > 1MB${reset}"
   echo ""
   echo -e "${bold}Examples:${reset}"
-  echo -e "  $0 -a                           ${dim}# Auto-detect project type${reset}"
-  echo -e "  $0 -a -x tests                  ${dim}# Auto-detect, also exclude tests/${reset}"
-  echo -e "  $0                              ${dim}# Interactive mode${reset}"
-  echo -e "  $0 -e 'js ts jsx css'           ${dim}# Only JS/TS/CSS files${reset}"
-  echo -e "  $0 -d src -x tests              ${dim}# Only src/, skip tests/${reset}"
-  echo -e "  $0 -s 524288                    ${dim}# Max 512KB per file${reset}"
-  echo -e "  $0 -n -p 'Makefile Dockerfile'   ${dim}# Include specific no-ext files${reset}"
+  echo -e "  ${cmd} -a                           ${dim}# Auto-detect project type${reset}"
+  echo -e "  ${cmd} -a -x tests                  ${dim}# Auto + exclude a dir${reset}"
+  echo -e "  ${cmd} -e 'py toml yaml'            ${dim}# Specific extensions only${reset}"
+  echo -e "  ${cmd} -d src -n                     ${dim}# Scan dir, include no-ext files${reset}"
+  echo -e "  ${cmd}                               ${dim}# Interactive mode${reset}"
 }
 
 # ═══════════════════════════════════════════════════════════════════
