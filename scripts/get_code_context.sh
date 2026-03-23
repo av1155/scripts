@@ -376,8 +376,8 @@ show_help() {
   echo -e "  ${cmd} -a                           ${dim}# Auto-detect project type${reset}"
   echo -e "  ${cmd} -a -x tests                  ${dim}# Auto + exclude a dir${reset}"
   echo -e "  ${cmd} -e 'py toml yaml'            ${dim}# Specific extensions only${reset}"
-  echo -e "  ${cmd} -d src -n                     ${dim}# Scan dir, include no-ext files${reset}"
-  echo -e "  ${cmd}                               ${dim}# Interactive mode${reset}"
+  echo -e "  ${cmd} -d src -n                    ${dim}# Scan dir, include no-ext files${reset}"
+  echo -e "  ${cmd}                              ${dim}# Interactive mode${reset}"
 }
 
 # ═══════════════════════════════════════════════════════════════════
