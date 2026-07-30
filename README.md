@@ -123,14 +123,13 @@ A script that outputs a comprehensive usage guide for the `nvim-surround` plugin
 
 **File:** `scripts/package_updater.zsh`
 
-A script to update various packages and applications on macOS. It handles Homebrew, Conda environments, Oh My Zsh, Node.js, npm packages, and more. It also manages log files and can send email reports.
+A script to update various packages and applications on macOS. It handles Homebrew, tmux plugins, Oh My Zsh, and pnpm-managed global Node.js tooling. It also manages log files and can send email reports.
 
 **Features:**
 
 -   Update Homebrew packages and manage `Brewfile`.
--   Update Conda environments and backup to GitHub.
 -   Update tmux plugins and Oh My Zsh.
--   Update Node.js using NVM and npm global packages.
+-   Update pnpm global packages (node itself is Homebrew-managed).
 -   Manage log files and send email reports.
 
 ### Package Updater for Raspberry Pi

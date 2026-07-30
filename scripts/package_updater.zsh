@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # Package Updater
-# A script to update Homebrew, Conda environments, Oh My Zsh, Mac App Store applications, Node.js, npm packages, and AstroNvim plugins.
+# A script to update Homebrew packages, tmux plugins, Oh My Zsh, and pnpm-managed global Node.js tooling.
 
 # If the script is run non-interactively (e.g., cron job), set the PATH and ZSH variables
 if [ ! -t 0 ]; then
@@ -14,13 +14,6 @@ if [ ! -t 0 ]; then
 	# Ensure Homebrew Ruby is prioritized over system Ruby
 	export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 fi
-
-# Initialize Conda for script usage
-[ -s "/opt/homebrew/Caskroom/miniforge/base/etc/profile.d/conda.sh" ] && source "/opt/homebrew/Caskroom/miniforge/base/etc/profile.d/conda.sh"
-
-# Initialize NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 # VARIABLES & HELPER FUNCTIONS ====================================================
 
@@ -51,8 +44,9 @@ update_homebrew() {
 		echo_color $BLUE "Updating Homebrew..."
 		brew update
 		brew upgrade
-		brew cleanup
 		brew autoremove
+		brew cleanup --prune=all
+		brew doctor || echo_color $ORANGE "brew doctor reported warnings (non-fatal)."
 		cd "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap"
 		rm Brewfile
 		brew bundle dump --describe
@@ -75,108 +69,6 @@ update_homebrew() {
 	else
 		echo_color $RED "Homebrew not found. Skipping..."
 	fi
-}
-
-# Function to remove YAML files for deleted Conda environments
-remove_deleted_env_backups() {
-	local BACKUP_DIR="${HOME}/CondaBackup"
-
-	# Get a list of current Conda environments
-	local current_envs=$(conda env list | awk '{print $1}' | grep -vE '^\#')
-
-	echo_color $BLUE "Checking for deleted environments to remove from backup..."
-	for file in "$BACKUP_DIR"/*.yml; do
-		env_name=$(basename "$file" .yml)
-		if ! echo "$current_envs" | grep -qx "$env_name"; then
-			echo_color $ORANGE "Removing outdated environment backup: $env_name"
-			rm "$file" || {
-				echo_color $RED "Failed to delete outdated file $file."
-				exit 1
-			}
-		fi
-	done
-	echo_color $GREEN "Cleanup of deleted environment backups complete."
-	echo_color $ORANGE "====================================================================================\n"
-}
-
-# Update miniforge + Conda environments
-update_conda_environments() {
-	if command_exists conda; then
-		echo_color $BLUE "Updating all Conda environments..."
-
-		for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
-			echo_color $GREEN "\nActivating and updating $env..."
-			conda activate $env
-			conda update --all -y
-			conda clean --all -y
-			conda deactivate
-		done
-
-		conda activate base
-
-		echo_color $GREEN "\nAll Conda environments have been updated."
-		echo_color $ORANGE "====================================================================================\n"
-	else
-		echo_color $RED "miniforge not found. Skipping..."
-	fi
-}
-
-# Backup Conda environments
-backup_conda_environments() {
-	BACKUP_DIR="${HOME}/CondaBackup"
-
-	# Check if git and conda are installed
-	if ! command -v git &>/dev/null; then
-		echo_color $RED "git is not installed. Please install git first."
-		exit 1
-	fi
-
-	if ! command -v conda &>/dev/null; then
-		echo_color $RED "conda is not installed. Please install conda first."
-		exit 1
-	fi
-
-	# Check if the backup directory exists
-	if [ ! -d "$BACKUP_DIR" ]; then
-		echo_color $BLUE "CondaBackup directory not found. Cloning from GitHub..."
-		git clone https://github.com/av1155/CondaBackup.git "$BACKUP_DIR" || {
-			echo_color $RED "Failed to clone CondaBackup repository."
-			exit 1
-		}
-	fi
-
-	echo_color $BLUE "Backing up all Conda environments to $BACKUP_DIR..."
-
-	for env in $(conda env list | awk '{print $1}' | grep -vE '^\#'); do
-		echo_color $GREEN "\nBacking up environment $env..."
-		conda env export --name "$env" >"$BACKUP_DIR/${env}.yml" || {
-			echo_color $RED "Failed to back up environment $env."
-			exit 1
-		}
-	done
-
-	echo_color $GREEN "\nAll Conda environments have been backed up to $BACKUP_DIR."
-
-	# Push changes to GitHub
-	echo_color $BLUE "Pushing changes to GitHub..."
-	cd "$BACKUP_DIR" || {
-		echo_color $RED "Failed to change to the backup directory."
-		exit 1
-	}
-
-	git add .
-	git commit -m "Backup Conda environments on $(date +'%Y-%m-%d %H:%M:%S')"
-	if [ $? -eq 0 ]; then
-		git push || {
-			echo_color $RED "Failed to push changes to GitHub."
-			exit 1
-		}
-	else
-		echo_color $GREEN "No changes to commit."
-	fi
-	cd - >/dev/null
-
-	echo_color $ORANGE "====================================================================================\n"
 }
 
 # Function to update tmux TPM plugins
@@ -245,139 +137,13 @@ update_mas() {
 	fi
 }
 
-# Function to update NVM (Node Version Manager)
-update_nvm() {
-	# Check if NVM is installed
-	if [ -d "$HOME/.nvm" ]; then
-		# Load NVM for version check
-		export NVM_DIR="$HOME/.nvm"
-		[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-		# Fetch the latest NVM version from GitHub README
-		LATEST_NVM_VERSION=$(curl -sL 'https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/README.md' |
-			grep -oE 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install.sh' |
-			grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' |
-			head -n 1)
-
-		# Default to v0.40.1 if no version is found
-		if [ -z "$LATEST_NVM_VERSION" ]; then
-			echo_color $RED "Failed to fetch the latest NVM version, defaulting to v0.40.1."
-			LATEST_NVM_VERSION="v0.40.1"
-		fi
-
-		# Get the current installed NVM version
-		CURRENT_NVM_VERSION=$(nvm --version 2>/dev/null)
-
-		# Compare versions and update if needed
-		if [ "$CURRENT_NVM_VERSION" != "${LATEST_NVM_VERSION#v}" ]; then
-			echo_color $BLUE "Updating NVM from version $CURRENT_NVM_VERSION to $LATEST_NVM_VERSION..."
-			curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM_VERSION}/install.sh" | bash || {
-				echo_color $RED "Failed to update NVM."
-				exit 1
-			}
-			# Reload NVM after update
-			[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-			echo_color $GREEN "NVM updated to version $LATEST_NVM_VERSION."
-		else
-			echo_color $GREEN "NVM is already up-to-date (version $CURRENT_NVM_VERSION)."
-		fi
-	else
-		echo_color $RED "NVM not found. Skipping NVM update..."
-	fi
-	echo_color $ORANGE "====================================================================================\n"
-}
-
-# Update Node.js using NVM
-update_node() {
-	if command_exists nvm; then
-		echo_color $BLUE "Updating Node.js..."
-
-		# Get the current version of Node.js
-		CURRENT_NODE_VERSION=$(nvm current | sed 's/\x1b\[[0-9;]*m//g')
-
-		# Get the latest LTS Node.js version and strip ANSI escape codes
-		LATEST_LTS_VERSION=$(nvm ls-remote --lts | tail -1 | awk '{ print $2 }' | sed 's/\x1b\[[0-9;]*m//g')
-
-		# Debug: Print versions for checking
-		echo "Current Node version:${PURPLE} ${CURRENT_NODE_VERSION} ${NC}"
-		echo "Latest LTS version:${PURPLE} $(nvm ls-remote --lts | tail -1) ${NC}"
-
-		if [ "$CURRENT_NODE_VERSION" != "$LATEST_LTS_VERSION" ]; then
-			# Install the latest LTS Node.js version and reinstall packages from the current version
-			nvm install --lts --reinstall-packages-from="$CURRENT_NODE_VERSION" || {
-				echo_color $RED "Failed to update Node.js."
-				exit 1
-			}
-
-			# Switch to the latest Node.js version
-			nvm use --lts || {
-				echo_color $RED "Failed to switch to the latest Node.js version."
-				exit 1
-			}
-
-			# Check the new current version after update
-			NEW_NODE_VERSION=$(nvm current | sed 's/\x1b\[[0-9;]*m//g')
-
-			# Uninstall the old version if it's different from the new version
-			if [ "$NEW_NODE_VERSION" != "$CURRENT_NODE_VERSION" ]; then
-				echo -e "${BLUE}Uninstalling the old version of Node.js${NC} ${PURPLE}${CURRENT_NODE_VERSION}${NC}..."
-				nvm uninstall "$CURRENT_NODE_VERSION" || {
-					echo_color $RED "Failed to uninstall the old version of Node.js."
-					exit 1
-				}
-			fi
-
-			echo_color $GREEN "Node.js has been updated to the latest LTS version: ${NEW_NODE_VERSION}"
-
-		else
-			echo_color $BLUE "Already on the latest LTS version of Node.js."
-		fi
-		echo_color $ORANGE "====================================================================================\n"
-	else
-		echo_color $RED "NVM not found. Skipping Node.js update..."
-	fi
-}
-
-# Update npm packages
-update_npm() {
-	if command_exists npm; then
-		if [ -t 0 ]; then
-			# Interactive mode
-			echo_color $BLUE "Do you want to update npm global packages? (y/N)"
-			# Set a 10-second timeout for user response
-			read -r -t 10 update_choice
-			if [[ $? -eq 0 ]] && [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
-				echo_color $BLUE "Updating npm..."
-				npm update -g || {
-					echo_color $RED "Failed to update npm."
-					exit 1
-				}
-			else
-				echo_color $GREEN "Skipping npm update."
-			fi
-		else
-			# Non-interactive mode (e.g., cron job)
-			echo_color $BLUE "Updating npm in non-interactive mode..."
-			npm update -g || {
-				echo_color $RED "Failed to update npm."
-				exit 1
-			}
-		fi
-		echo_color $ORANGE "====================================================================================\n"
-	else
-		echo_color $RED "npm not found. Skipping..."
-	fi
-}
-
-# Update pnpm packages
-update_pnpm() {
+# Update pnpm-managed global packages (node itself comes from Homebrew)
+update_pnpm_globals() {
 	if command_exists pnpm; then
 		echo_color $BLUE "Updating pnpm global packages..."
-		pnpm -g up || {
-			echo_color $RED "Failed to update pnpm packages."
-			exit 1
-		}
-		echo_color $GREEN "pnpm global packages have been updated."
+		pnpm -g up || echo_color $RED "Failed to update pnpm packages."
+
+		echo_color $GREEN "pnpm globals updated."
 		echo_color $ORANGE "====================================================================================\n"
 	else
 		echo_color $RED "pnpm not found. Skipping..."
@@ -414,75 +180,6 @@ update_astronvim() {
 		echo_color $ORANGE "====================================================================================\n"
 	else
 		echo_color $RED "Neovim not found. Skipping AstroNvim update..."
-	fi
-}
-
-# Update Java
-update_java() {
-	echo_color $BLUE "Updating Java JDK..."
-	JDK_PAGE_URL="https://www.oracle.com/java/technologies/downloads/#jdk"
-
-	# Fetch the page and extract the link
-	JDK_URL=$(curl -sL $JDK_PAGE_URL | grep -oE 'https://download.oracle.com/java/[0-9]+/latest/jdk-[0-9]+_macos-aarch64_bin.tar.gz' | head -n 1)
-
-	# If JDK_URL is not found, exit with error
-	if [ -z "$JDK_URL" ]; then
-		echo_color $RED "Failed to find the latest JDK download link."
-		exit 1
-	fi
-
-	# Define the download and extraction location
-	DOWNLOAD_LOCATION="$HOME/Downloads"
-	EXTRACT_LOCATION="$DOWNLOAD_LOCATION/jdk_extract"
-
-	# Create a directory to extract the tarball
-	mkdir -p "$EXTRACT_LOCATION"
-
-	# Download the tar.gz file to the extraction directory
-	echo_color $ORANGE "Downloading and extracting JDK from $JDK_URL..."
-	curl -L "$JDK_URL" | tar -xz -C "$EXTRACT_LOCATION"
-
-	# Find the extracted directory that ends with .jdk
-	JDK_DIR_NAME=$(find "$EXTRACT_LOCATION" -maxdepth 1 -type d -name "*.jdk" -exec basename {} \;)
-
-	# Make sure it's a valid macOS JDK bundle with Info.plist
-	if [ ! -f "$EXTRACT_LOCATION/$JDK_DIR_NAME/Contents/Info.plist" ]; then
-		echo_color $RED "Extracted JDK is missing Info.plist — invalid macOS .jdk bundle."
-		echo_color $RED "Skipping install to prevent a broken Java setup."
-		rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
-		rmdir "$EXTRACT_LOCATION"
-		return
-	fi
-
-	# Check if this directory already exists in the target directory
-	if [ ! -d "$HOME/Library/Java/JavaVirtualMachines/$JDK_DIR_NAME" ]; then
-		echo_color $GREEN "Installing Java..."
-		# Move the JDK directory to the Java Virtual Machines directory
-		mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
-		echo_color $GREEN "Java installed successfully."
-	else
-		echo_color $BLUE "Java is already installed. No action taken, residual files have been removed."
-		# Remove the extracted JDK if already installed
-		rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
-	fi
-
-	# Remove the extraction directory if empty
-	rmdir "$EXTRACT_LOCATION"
-
-	echo_color $ORANGE "====================================================================================\n"
-}
-
-# Update Ruby gems
-update_gems() {
-	if command_exists gem; then
-		echo_color $BLUE "Updating Ruby gems..."
-		gem update --system
-		gem update
-		gem cleanup
-		echo_color $GREEN "Ruby gems have been updated."
-		echo_color $ORANGE "====================================================================================\n"
-	else
-		echo_color $RED "Ruby gem command not found. Skipping gem update..."
 	fi
 }
 
@@ -544,19 +241,10 @@ send_update_report() {
 # Main script execution
 main() {
 	update_homebrew
-	remove_deleted_env_backups
-	update_conda_environments
-	backup_conda_environments
 	update_tmux_plugins
 	update_omz
-	# update_mas
-	update_nvm
-	update_node
-	update_npm
-	update_pnpm
+	update_pnpm_globals
 	# update_astronvim
-	update_java
-	update_gems
 	gh extension upgrade gh-copilot
 	echo_color $GREEN "All applicable packages and applications updated.\n"
 
