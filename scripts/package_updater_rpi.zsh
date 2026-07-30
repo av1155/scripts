@@ -1,11 +1,8 @@
 #!/bin/zsh
 
-# Initialize Conda for script usage
-if [ -f "/home/andreaventi/miniforge3/etc/profile.d/conda.sh" ]; then
-    source "/home/andreaventi/miniforge3/etc/profile.d/conda.sh"
-else
-    echo "Conda initialization script not found. Exiting..."
-    exit 1
+# Initialize Conda if available (non-fatal if missing)
+if [ -f "$HOME/miniforge3/etc/profile.d/conda.sh" ]; then
+    source "$HOME/miniforge3/etc/profile.d/conda.sh"
 fi
 
 if [ -d "$HOME/.oh-my-zsh" ]; then
